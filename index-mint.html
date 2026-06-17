@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#E8FBF8">
+  <title>2026 청소년 구강건강 챌린지 (민트)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <style>
+    :root {
+      --mint: #4ECDC4;
+      --mint-light: #B8F0EB;
+      --mint-pale: #E8FBF8;
+      --coral: #FF8A7A;
+      --coral-light: #FFD4CC;
+      --ivory: #FFF9F2;
+      --surface: #ffffff;
+      --primary: #2A9D8F;
+      --text: #1F4E47;
+      --text-muted: #5A8A82;
+      --shadow: 0 10px 36px rgba(42, 157, 143, 0.15);
+      --radius: 20px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100dvh;
+      font-family: "Noto Sans KR", "Malgun Gothic", sans-serif;
+      background: linear-gradient(165deg, var(--ivory) 0%, var(--mint-pale) 45%, #D4F5F0 100%);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding:
+        calc(12px + var(--safe-top))
+        16px
+        calc(20px + var(--safe-bottom));
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1ch;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border-radius: 18px;
+      box-shadow: 0 4px 20px rgba(78, 205, 196, 0.2);
+      border: 1px solid rgba(78, 205, 196, 0.25);
+      margin-bottom: 16px;
+    }
+
+    .header__center {
+      font-size: calc(0.78rem + 3pt);
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.3;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .header__brand {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .header__title {
+      font-size: 0.62rem;
+      font-weight: 500;
+      color: #fff;
+      background: linear-gradient(135deg, var(--mint) 0%, var(--primary) 100%);
+      padding: 5px 10px;
+      border-radius: 999px;
+      line-height: 1.35;
+      flex-shrink: 0;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(42, 157, 143, 0.3);
+    }
+
+    .stats-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 14px;
+    }
+
+    .stats-card__text {
+      font-family: "Pretendard", "Noto Sans KR", sans-serif;
+      font-size: calc(1rem + 3pt);
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: -0.02em;
+      text-align: center;
+      padding: 8px 18px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(184, 240, 235, 0.5) 100%);
+      border-radius: 999px;
+      border: 1px solid rgba(78, 205, 196, 0.35);
+      box-shadow: 0 4px 14px rgba(78, 205, 196, 0.12);
+    }
+
+    .stats-card__text strong {
+      font-weight: 600;
+      color: var(--primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stats-card__text.is-blinking {
+      animation: tag-blink 1s ease-in-out 5;
+    }
+
+    @keyframes tag-blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    .hero-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 8px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border: 2px solid rgba(78, 205, 196, 0.2);
+    }
+
+    .hero-card__image-wrap {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      min-height: 280px;
+      background: linear-gradient(145deg, var(--mint-pale) 0%, var(--ivory) 50%, var(--coral-light) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-card__skeleton {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        #dff5f2 25%,
+        #f5fffe 50%,
+        #dff5f2 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .hero-card__image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    .hero-card__image.is-loaded {
+      opacity: 1;
+    }
+
+    .hero-card__image.is-loaded + .hero-card__skeleton {
+      display: none;
+    }
+
+    .ai-notice {
+      font-size: 8pt;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    .demo-notice {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: rgba(255, 138, 122, 0.12);
+      border: 1px solid rgba(255, 138, 122, 0.25);
+      border-radius: 12px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .demo-notice[hidden] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header__title">2026 청소년 구강건강 챌린지</div>
+      <div class="header__brand">
+        <span class="header__center" id="center-name">🦷 미추홀구 보건소와 함께해요!✨</span>
+      </div>
+    </header>
+
+    <section class="stats-section">
+      <p class="stats-card__text" id="tag-stats">
+        지금까지 <strong><span id="tag-count">-</span>번</strong> 태그 했어요!🎯
+      </p>
+    </section>
+
+    <section class="hero-card">
+      <div class="hero-card__image-wrap">
+        <img
+          class="hero-card__image"
+          id="hero-image"
+          src=""
+          alt="구강건강 챌린지 이미지"
+        >
+        <div class="hero-card__skeleton" id="skeleton"></div>
+      </div>
+    </section>
+
+    <p class="ai-notice">본 이미지는 AI를 활용하여 제작되었습니다</p>
+
+    <p class="demo-notice" id="demo-notice" hidden>
+      데모 모드입니다. Google Sheets 연동 후 실제 태그 통계가 집계됩니다.
+    </p>
+  </div>
+
+  <script>
+    const CONFIG = {
+      healthCenterName: "🦷 미추홀구 보건소와 함께해요!✨",
+      appsScriptUrl: "",
+      images: [
+        { id: "01", src: "images/01.png", weight: 1, alt: "귀찮음" },
+        { id: "02", src: "images/02.png", weight: 1, alt: "충치는 연락 없이 옴" },
+        { id: "03", src: "images/03.png", weight: 1, alt: "점심시간 칫솔" },
+        { id: "04", src: "images/04.png", weight: 1, alt: "친구가 웃기면" },
+        { id: "05", src: "images/05.png", weight: 1, alt: "나중에 할게요" },
+        { id: "06", src: "images/06.png", weight: 1, alt: "점심시간 통장" },
+        { id: "07", src: "images/07.png", weight: 1, alt: "오늘만 안 해야지" },
+        { id: "08", src: "images/08.png", weight: 1, alt: "간식 가게" },
+        { id: "09", src: "images/09.png", weight: 1, alt: "치아 날씨" },
+        { id: "10", src: "images/10.png", weight: 1, alt: "점심시간 휴식" },
+        { id: "11", src: "images/11.png", weight: 1, alt: "오늘의 퀘스트" },
+        { id: "12", src: "images/12.png", weight: 1, alt: "건강 점검 결과" },
+        { id: "13", src: "images/13.png", weight: 1, alt: "농구 점심시간" },
+        { id: "14", src: "images/14.png", weight: 1, alt: "원래 하는 거" },
+        { id: "15", src: "images/15.png", weight: 1, alt: "핸드폰과 칫솔" }
+      ]
+    };
+
+    const STORAGE_KEY = "health_challenge_tag_count";
+
+    function pickWeightedImage(images) {
+      const total = images.reduce((sum, img) => sum + img.weight, 0);
+      let random = Math.random() * total;
+
+      for (const image of images) {
+        random -= image.weight;
+        if (random <= 0) return image;
+      }
+
+      return images[images.length - 1];
+    }
+
+    function blinkTagCount() {
+      const el = document.getElementById("tag-stats");
+      el.classList.add("is-blinking");
+      setTimeout(function () {
+        el.classList.remove("is-blinking");
+      }, 5000);
+    }
+
+    function showImage(image) {
+      const img = document.getElementById("hero-image");
+      img.alt = image.alt;
+
+      img.onload = function () {
+        img.classList.add("is-loaded");
+      };
+
+      img.onerror = function () {
+        img.classList.add("is-loaded");
+        document.getElementById("skeleton").style.display = "none";
+      };
+
+      img.src = image.src;
+    }
+
+    function renderPage(data) {
+      document.getElementById("center-name").textContent = CONFIG.healthCenterName;
+      document.getElementById("tag-count").textContent = data.count;
+      blinkTagCount();
+      showImage(data.image);
+    }
+
+    async function fetchFromServer() {
+      const url = CONFIG.appsScriptUrl + "?t=" + Date.now();
+      const response = await fetch(url, { method: "GET" });
+      if (!response.ok) throw new Error("서버 응답 오류");
+      return response.json();
+    }
+
+    function runDemoMode() {
+      const count = Number(localStorage.getItem(STORAGE_KEY) || 0) + 1;
+      localStorage.setItem(STORAGE_KEY, String(count));
+
+      const image = pickWeightedImage(CONFIG.images);
+
+      document.getElementById("demo-notice").hidden = false;
+
+      return {
+        count: count,
+        image: image
+      };
+    }
+
+    async function init() {
+      document.getElementById("center-name").textContent = CONFIG.healthCenterName;
+
+      try {
+        let data;
+
+        if (CONFIG.appsScriptUrl) {
+          data = await fetchFromServer();
+          const image = CONFIG.images.find((img) => img.id === data.imageId) || pickWeightedImage(CONFIG.images);
+          data.image = image;
+        } else {
+          data = runDemoMode();
+        }
+
+        renderPage(data);
+      } catch (error) {
+        console.error(error);
+        const data = runDemoMode();
+        renderPage(data);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

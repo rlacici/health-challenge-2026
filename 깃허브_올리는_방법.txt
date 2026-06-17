@@ -1,0 +1,68 @@
+2026 구강건강 챌린지 — GitHub 업로드 방법
+==========================================
+
+[이미 PC에서 준비된 것]
+- git 저장소 초기화 + 첫 커밋 완료
+- index.html = 실제 사용 화면 (index-challenge.html 과 동일)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+방법 A — GitHub 웹사이트 + 명령 (추천)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 1단계. GitHub에 빈 저장소 만들기
+
+1. github.com 로그인
+2. 오른쪽 위 + → New repository
+3. Repository name: health-challenge-2026
+4. Public 선택
+5. 「Add a README file」 체크 안 함
+6. Create repository
+
+■ 2단계. 주소 연결 후 업로드
+
+GitHub에 나온 안내 중 「push an existing repository」 부분을
+아래 명령으로 실행합니다.
+
+PowerShell 열기 → 아래 한 줄씩 입력 (USERNAME을 본인 아이디로 변경):
+
+cd C:\Users\Song.Mong\Desktop\health-challenge-2026
+git remote add origin https://github.com/USERNAME/health-challenge-2026.git
+git branch -M main
+git push -u origin main
+
+※ 로그인 창이 뜨면 GitHub 계정으로 승인
+
+■ 3단계. GitHub Pages 켜기
+
+1. 저장소 페이지 → Settings
+2. 왼쪽 Pages
+3. Source: Deploy from a branch
+4. Branch: main / (root) → Save
+5. 1~3분 후 초록색 주소 확인:
+   https://USERNAME.github.io/health-challenge-2026/
+
+■ 4단계. 폰에서 확인
+
+1. 위 주소를 폰 브라우저에서 열기
+2. 이미지·태그 수·시트 연동 확인
+3. NFC 키링에는 이 주소 저장
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NFC에 넣을 주소
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+https://USERNAME.github.io/health-challenge-2026/
+
+(index.html 이 메인이라 / 뒤에 파일명 불필요)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+나중에 수정했을 때 다시 올리기
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cd C:\Users\Song.Mong\Desktop\health-challenge-2026
+git add .
+git commit -m "수정 내용"
+git push
