@@ -6,11 +6,11 @@ html 파일만내면 이미지가 안 보입니다.
   health-challenge-2026/
     index-challenge.html  (또는 index.html)
     images/
-      01.png ~ 15.png
+      01.jpg ~ 20.jpg
 
 1. health-challenge-2026 폴더를 마우스 오른쪽 → "압축" 또는 "ZIP으로 보내기"
 2. 카톡으로 ZIP 파일 전송
 3. 폰에서 ZIP 풀기
 4. 풀린 폴더 안의 index-challenge.html 실행
 
-※ 폴더 구조가 그대로 있어야 images/01.png 등이 보입니다.
+※ 폴더 구조가 그대로 있어야 images/01.jpg 등이 보입니다.
