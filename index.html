@@ -265,6 +265,12 @@
       return images[images.length - 1];
     }
 
+    function incrementPersonalCount() {
+      const count = Number(localStorage.getItem(STORAGE_KEY) || 0) + 1;
+      localStorage.setItem(STORAGE_KEY, String(count));
+      return count;
+    }
+
     function blinkTagCount() {
       const el = document.getElementById("tag-stats");
       el.classList.add("is-blinking");
@@ -332,9 +338,7 @@
     }
 
     function runDemoMode() {
-      const count = Number(localStorage.getItem(STORAGE_KEY) || 0) + 1;
-      localStorage.setItem(STORAGE_KEY, String(count));
-
+      const count = incrementPersonalCount();
       const image = pickWeightedImage(CONFIG.images);
 
       return {
@@ -356,6 +360,7 @@
             return normalizeId(img.id) === normalizeId(data.imageId);
           }) || pickWeightedImage(CONFIG.images);
           data.image = image;
+          data.count = incrementPersonalCount();
         } else {
           data = runDemoMode();
         }

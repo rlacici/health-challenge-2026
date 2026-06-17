@@ -88,7 +88,7 @@ function recordTagAndPickImage() {
   incrementImageCount(statsSheet, picked.id);
 
   return {
-    count: newCount,
+    totalCount: newCount,
     imageId: picked.id,
     healthCenterName: String(settings.getRange("B1").getValue() || DEFAULT_HEALTH_CENTER)
   };
