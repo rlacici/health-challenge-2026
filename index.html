@@ -253,6 +253,19 @@
       return text;
     }
 
+    function getBasePath() {
+      let path = window.location.pathname;
+      if (path.endsWith("/")) return path;
+      if (/\.html?$/i.test(path)) {
+        return path.slice(0, path.lastIndexOf("/") + 1);
+      }
+      return path + "/";
+    }
+
+    function resolveImageSrc(relativePath) {
+      return getBasePath() + relativePath.replace(/^\//, "");
+    }
+
     function pickWeightedImage(images) {
       const total = images.reduce((sum, img) => sum + img.weight, 0);
       let random = Math.random() * total;
@@ -293,7 +306,7 @@
         img.alt = "이미지를 불러올 수 없습니다. html과 images 폴더를 함께 보내주세요.";
       };
 
-      img.src = image.src;
+      img.src = resolveImageSrc(image.src);
     }
 
     function renderPage(data) {
