@@ -294,19 +294,52 @@
 
     function showImage(image) {
       const img = document.getElementById("hero-image");
+      const skeleton = document.getElementById("skeleton");
+      const maxAttempts = 3;
+
+      img.classList.remove("is-loaded");
+      skeleton.style.display = "";
+      img.removeAttribute("src");
       img.alt = image.alt;
 
-      img.onload = function () {
-        img.classList.add("is-loaded");
-      };
+      function tryLoad(attempt) {
+        const url = resolveImageSrc(image.src) + "?t=" + Date.now() + "&try=" + attempt;
+        const loader = new Image();
 
-      img.onerror = function () {
-        img.classList.add("is-loaded");
-        document.getElementById("skeleton").style.display = "none";
-        img.alt = "이미지를 불러올 수 없습니다. html과 images 폴더를 함께 보내주세요.";
-      };
+        loader.onload = function () {
+          img.onload = function () {
+            img.classList.add("is-loaded");
+          };
+          img.onerror = function () {
+            if (attempt < maxAttempts) {
+              setTimeout(function () {
+                tryLoad(attempt + 1);
+              }, 400 * attempt);
+              return;
+            }
+            img.classList.add("is-loaded");
+            skeleton.style.display = "none";
+            img.alt = "이미지를 불러올 수 없습니다. 잠시 후 다시 태그해 주세요.";
+          };
+          img.src = url;
+        };
 
-      img.src = resolveImageSrc(image.src);
+        loader.onerror = function () {
+          if (attempt < maxAttempts) {
+            setTimeout(function () {
+              tryLoad(attempt + 1);
+            }, 400 * attempt);
+            return;
+          }
+          img.classList.add("is-loaded");
+          skeleton.style.display = "none";
+          img.alt = "이미지를 불러올 수 없습니다. 잠시 후 다시 태그해 주세요.";
+        };
+
+        loader.src = url;
+      }
+
+      tryLoad(1);
     }
 
     function renderPage(data) {
@@ -381,7 +414,17 @@
         renderPage(data);
       } catch (error) {
         console.error(error);
-        const data = runDemoMode();
+        let data;
+        if (CONFIG.appsScriptUrl) {
+          const image = pickWeightedImage(CONFIG.images);
+          data = {
+            count: incrementPersonalCount(),
+            image: image,
+            healthCenterName: CONFIG.healthCenterName
+          };
+        } else {
+          data = runDemoMode();
+        }
         renderPage(data);
       }
     }
