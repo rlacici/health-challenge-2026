@@ -31,7 +31,7 @@ const DEFAULT_IMAGES = [
   ["20", "인천 전국 16위", 1]
 ];
 
-const DEFAULT_HEALTH_CENTER = "🦷 미추홀구 보건소와 함께해요!✨";
+const DEFAULT_HEALTH_CENTER = "🦷 미추홀구 보건소와 함께해요!";
 
 function doGet(e) {
   e = e || {};
