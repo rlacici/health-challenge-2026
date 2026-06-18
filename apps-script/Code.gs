@@ -37,7 +37,7 @@ function doGet(e) {
   e = e || {};
   try {
     validateSpreadsheetId();
-    const result = recordTagAndPickImage();
+    const result = recordTagAndPickImage(e.parameter.imageId);
     return createResponse(result, e.parameter.callback);
   } catch (error) {
     return createResponse({
@@ -68,7 +68,7 @@ function validateSpreadsheetId() {
   }
 }
 
-function recordTagAndPickImage() {
+function recordTagAndPickImage(clientImageId) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const settings = ss.getSheetByName("설정");
   const imagesSheet = ss.getSheetByName("이미지");
@@ -83,7 +83,16 @@ function recordTagAndPickImage() {
     throw new Error("이미지 시트에 데이터가 없습니다.");
   }
 
-  const picked = pickWeighted(images);
+  let picked;
+  if (clientImageId) {
+    const targetId = padId(clientImageId);
+    picked = images.find(function (img) {
+      return padId(img.id) === targetId;
+    }) || pickWeighted(images);
+  } else {
+    picked = pickWeighted(images);
+  }
+
   const newCount = incrementTotal(statsSheet);
   incrementImageCount(statsSheet, picked.id);
 

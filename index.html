@@ -2,6 +2,8 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <link rel="preconnect" href="https://rlacici.github.io" crossorigin>
+  <link rel="dns-prefetch" href="https://script.google.com">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#1A2B4A">
   <meta name="mobile-web-app-capable" content="yes">
@@ -224,12 +226,14 @@
     </p>
 
     <div class="image-stage">
-      <img
-        class="image-stage__img"
-        id="hero-image"
-        src=""
-        alt="구강건강 챌린지 이미지"
-      >
+          <img
+            class="image-stage__img"
+            id="hero-image"
+            src=""
+            alt="구강건강 챌린지 이미지"
+            decoding="async"
+            fetchpriority="high"
+          >
       <div class="image-stage__skeleton" id="skeleton"></div>
     </div>
 
@@ -316,51 +320,33 @@
     function showImage(image) {
       const img = document.getElementById("hero-image");
       const skeleton = document.getElementById("skeleton");
-      const maxAttempts = 3;
+      const baseUrl = resolveImageSrc(image.src);
+      let attempt = 0;
+      const maxAttempts = 2;
 
       img.classList.remove("is-loaded");
       skeleton.style.display = "";
-      img.removeAttribute("src");
       img.alt = image.alt;
 
-      function tryLoad(attempt) {
-        const url = resolveImageSrc(image.src) + "?t=" + Date.now() + "&try=" + attempt;
-        const loader = new Image();
-
-        loader.onload = function () {
-          img.onload = function () {
-            img.classList.add("is-loaded");
-          };
-          img.onerror = function () {
-            if (attempt < maxAttempts) {
-              setTimeout(function () {
-                tryLoad(attempt + 1);
-              }, 400 * attempt);
-              return;
-            }
-            img.classList.add("is-loaded");
-            skeleton.style.display = "none";
-            img.alt = "이미지를 불러올 수 없습니다. 잠시 후 다시 태그해 주세요.";
-          };
-          img.src = url;
+      function loadImage() {
+        const url = attempt === 0 ? baseUrl : baseUrl + "?t=" + Date.now();
+        img.onload = function () {
+          img.classList.add("is-loaded");
         };
-
-        loader.onerror = function () {
+        img.onerror = function () {
+          attempt++;
           if (attempt < maxAttempts) {
-            setTimeout(function () {
-              tryLoad(attempt + 1);
-            }, 400 * attempt);
+            setTimeout(loadImage, 200);
             return;
           }
           img.classList.add("is-loaded");
           skeleton.style.display = "none";
           img.alt = "이미지를 불러올 수 없습니다. 잠시 후 다시 태그해 주세요.";
         };
-
-        loader.src = url;
+        img.src = url;
       }
 
-      tryLoad(1);
+      loadImage();
     }
 
     function renderPage(data) {
@@ -371,47 +357,31 @@
       showImage(data.image);
     }
 
-    function fetchFromServer() {
-      return new Promise(function (resolve, reject) {
-        const callbackName = "hc_" + Date.now();
-        let script;
+    function recordTagInBackground(imageId) {
+      if (!CONFIG.appsScriptUrl) return;
 
-        const timeout = setTimeout(function () {
-          cleanup();
-          reject(new Error("서버 응답 시간 초과"));
-        }, 15000);
+      const callbackName = "hc_bg_" + Date.now();
+      let script;
 
-        function cleanup() {
-          clearTimeout(timeout);
-          delete window[callbackName];
-          if (script && script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
+      window[callbackName] = function () {
+        delete window[callbackName];
+        if (script && script.parentNode) {
+          script.parentNode.removeChild(script);
         }
-
-        window[callbackName] = function (data) {
-          cleanup();
-          resolve(data);
-        };
-
-        script = document.createElement("script");
-        script.src = CONFIG.appsScriptUrl + "?callback=" + callbackName + "&t=" + Date.now();
-        script.onerror = function () {
-          cleanup();
-          reject(new Error("스크립트 연결 실패"));
-        };
-        document.head.appendChild(script);
-      });
-    }
-
-    function runDemoMode() {
-      const count = incrementPersonalCount();
-      const image = pickWeightedImage(CONFIG.images);
-
-      return {
-        count: count,
-        image: image
       };
+
+      script = document.createElement("script");
+      script.src = CONFIG.appsScriptUrl
+        + "?callback=" + callbackName
+        + "&imageId=" + encodeURIComponent(normalizeId(imageId))
+        + "&t=" + Date.now();
+      script.onerror = function () {
+        delete window[callbackName];
+        if (script && script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
+      };
+      document.head.appendChild(script);
     }
 
     function registerServiceWorker() {
@@ -419,40 +389,21 @@
       navigator.serviceWorker.register(getBasePath() + "sw.js").catch(function () {});
     }
 
-    async function init() {
+    function init() {
       registerServiceWorker();
       document.getElementById("center-name").textContent = CONFIG.healthCenterName;
 
-      try {
-        let data;
+      const count = incrementPersonalCount();
+      const image = pickWeightedImage(CONFIG.images);
 
-        if (CONFIG.appsScriptUrl) {
-          data = await fetchFromServer();
-          if (data.error) throw new Error(data.message || "서버 오류");
-          const image = CONFIG.images.find(function (img) {
-            return normalizeId(img.id) === normalizeId(data.imageId);
-          }) || pickWeightedImage(CONFIG.images);
-          data.image = image;
-          data.count = incrementPersonalCount();
-        } else {
-          data = runDemoMode();
-        }
+      renderPage({
+        count: count,
+        image: image,
+        healthCenterName: CONFIG.healthCenterName
+      });
 
-        renderPage(data);
-      } catch (error) {
-        console.error(error);
-        let data;
-        if (CONFIG.appsScriptUrl) {
-          const image = pickWeightedImage(CONFIG.images);
-          data = {
-            count: incrementPersonalCount(),
-            image: image,
-            healthCenterName: CONFIG.healthCenterName
-          };
-        } else {
-          data = runDemoMode();
-        }
-        renderPage(data);
+      if (CONFIG.appsScriptUrl) {
+        recordTagInBackground(image.id);
       }
     }
 
