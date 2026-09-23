@@ -148,7 +148,7 @@
     }
 
     .tag-line.is-blinking {
-      animation: tag-blink 1s ease-in-out 5;
+      animation: tag-blink 1s ease-in-out infinite;
     }
 
     @keyframes tag-blink {
@@ -326,10 +326,9 @@
 
     function blinkTagCount() {
       const el = document.getElementById("tag-stats");
+      el.classList.remove("is-blinking");
+      void el.offsetWidth;
       el.classList.add("is-blinking");
-      setTimeout(function () {
-        el.classList.remove("is-blinking");
-      }, 5000);
     }
 
     function showImage(image) {
