@@ -151,9 +151,24 @@
       animation: tag-blink 1s ease-in-out infinite;
     }
 
+    .tag-line.is-new-find {
+      font-size: calc(1.02rem + 2pt);
+      font-weight: 600;
+      color: var(--text-on-dark);
+      transform-origin: center center;
+      animation: new-find-pop 2s ease-out;
+    }
+
     @keyframes tag-blink {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.35; }
+    }
+
+    @keyframes new-find-pop {
+      0% { transform: scale(1); opacity: 0.7; }
+      16% { transform: scale(1.08); opacity: 1; }
+      32% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
     }
 
     .image-stage {
@@ -365,28 +380,57 @@
       };
     }
 
-    function renderCollection(found, isNew) {
+    let collectionTimer = null;
+
+    function setCollectionText(found, mode) {
       const label = document.getElementById("collection-label");
       const count = document.getElementById("collection-count");
       const suffix = document.getElementById("collection-suffix");
-      const complete = found >= COLLECTION_TOTAL;
-
       count.textContent = String(found);
 
-      if (complete) {
+      if (mode === "new") {
+        label.textContent = "✨ 새 이미지 발견! ";
+        suffix.textContent = " ✨";
+        return;
+      }
+      if (mode === "complete") {
         label.textContent = "🎉 ";
         suffix.textContent = " 모두 발견!";
         return;
       }
-
+      if (mode === "wait") {
+        label.textContent = "다음 이미지는 뭘까? ";
+        suffix.textContent = "";
+        return;
+      }
+      label.textContent = "또 만난 이미지 ";
       suffix.textContent = "";
-      label.textContent = isNew ? "NEW! " : "발견한 이미지 ";
     }
 
-    function blinkTagCount() {
+    function renderCollection(found, isNew) {
       const el = document.getElementById("tag-stats");
-      el.classList.remove("is-blinking");
+      const complete = found >= COLLECTION_TOTAL;
+
+      if (collectionTimer) {
+        clearTimeout(collectionTimer);
+        collectionTimer = null;
+      }
+
+      el.classList.remove("is-blinking", "is-new-find");
       void el.offsetWidth;
+
+      if (isNew) {
+        setCollectionText(found, "new");
+        el.classList.add("is-new-find");
+        collectionTimer = setTimeout(function () {
+          el.classList.remove("is-new-find");
+          setCollectionText(found, complete ? "complete" : "wait");
+          el.classList.add("is-blinking");
+        }, 2000);
+        return;
+      }
+
+      setCollectionText(found, complete ? "complete" : "repeat");
       el.classList.add("is-blinking");
     }
 
@@ -426,7 +470,6 @@
       const centerName = data.healthCenterName || CONFIG.healthCenterName;
       document.getElementById("center-name").textContent = centerName;
       renderCollection(data.found, data.isNew);
-      blinkTagCount();
       showImage(data.image);
     }
 
