@@ -279,7 +279,7 @@
         { id: "17", src: "images/17.jpg", weight: 2, alt: "자연스럽게 다음 순서" },
         { id: "18", src: "images/18.jpg", weight: 2, alt: "하다 보니 함" },
         { id: "19", src: "images/19.jpg", weight: 1, alt: "10명 중 2명" },
-        { id: "20", src: "images/20.jpg", weight: 1, alt: "인천 전국 16위" }
+        { id: "20", src: "images/20.jpg", weight: 1, minCount: 21, alt: "인천 전국 16위" }
       ]
     };
 
@@ -304,6 +304,15 @@
 
     function resolveImageSrc(relativePath) {
       return getBasePath() + relativePath.replace(/^\//, "");
+    }
+
+    function getAvailableImages(count) {
+      const unlocked = CONFIG.images.filter(function (image) {
+        return count >= (image.minCount || 1);
+      });
+      return unlocked.length ? unlocked : CONFIG.images.filter(function (image) {
+        return !image.minCount;
+      });
     }
 
     function pickWeightedImage(images) {
@@ -408,7 +417,7 @@
       document.getElementById("center-name").textContent = CONFIG.healthCenterName;
 
       const count = incrementPersonalCount();
-      const image = pickWeightedImage(CONFIG.images);
+      const image = pickWeightedImage(getAvailableImages(count));
 
       renderPage({
         count: count,
