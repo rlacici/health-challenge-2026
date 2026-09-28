@@ -404,7 +404,7 @@
         return;
       }
       if (mode === "keep-going") {
-        status.textContent = "모두 찾았어도 랜덤은 계속된다! 쭈욱~~👀";
+        status.textContent = "랜덤은 계속된다! 쭈욱~~👀";
         return;
       }
       if (mode === "wait") {
@@ -517,7 +517,7 @@
 
     function registerServiceWorker() {
       if (!("serviceWorker" in navigator)) return;
-      navigator.serviceWorker.register(getBasePath() + "sw.js?v=5").catch(function () {});
+      navigator.serviceWorker.register(getBasePath() + "sw.js?v=6").catch(function () {});
     }
 
     function init() {
