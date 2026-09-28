@@ -156,7 +156,7 @@
     }
 
     .tag-line.is-new-find {
-      font-size: calc(2.64rem + 3pt);
+      font-size: calc(1.32rem + 1.5pt);
       font-weight: 700;
       color: var(--text-on-dark);
       padding: 10px 18px;
@@ -164,7 +164,7 @@
       word-break: keep-all;
       z-index: 2;
       transform-origin: center center;
-      animation: new-find-pop 2s ease-out;
+      animation: new-find-pop 3s ease-out;
     }
 
     @keyframes tag-blink {
@@ -400,14 +400,14 @@
         return;
       }
       if (mode === "complete") {
-        status.innerHTML = "20개 중 <strong>20개</strong> 발견";
+        status.innerHTML = "20개 중 <strong>20개</strong> 모두 발견! 좋아요 👍!";
         return;
       }
       if (mode === "wait") {
         status.textContent = "다음 이미지는 뭘까?";
         return;
       }
-      status.innerHTML = "다시 만난 이미지! <strong>" + found + "개</strong> 발견 중";
+      status.innerHTML = "다시 만난 이미지! 현재 <strong>" + found + "개</strong> 발견 중!";
     }
 
     function renderCollection(found, isNew) {
@@ -429,7 +429,7 @@
           el.classList.remove("is-new-find");
           setCollectionText(found, complete ? "complete" : "wait");
           el.classList.add("is-blinking");
-        }, 2000);
+        }, 3000);
         return;
       }
 
