@@ -164,7 +164,7 @@
       word-break: keep-all;
       z-index: 2;
       transform-origin: center center;
-      animation: new-find-pop 3s ease-out, tag-blink 1s ease-in-out 3;
+      animation: new-find-pop 5s ease-out, tag-blink 1s ease-in-out 5;
     }
 
     @keyframes tag-blink {
@@ -429,7 +429,7 @@
           el.classList.remove("is-new-find");
           setCollectionText(found, complete ? "complete" : "wait");
           el.classList.add("is-blinking");
-        }, 3000);
+        }, 5000);
         return;
       }
 
@@ -505,7 +505,7 @@
 
     function registerServiceWorker() {
       if (!("serviceWorker" in navigator)) return;
-      navigator.serviceWorker.register(getBasePath() + "sw.js?v=3").catch(function () {});
+      navigator.serviceWorker.register(getBasePath() + "sw.js?v=4").catch(function () {});
     }
 
     function init() {
