@@ -235,7 +235,9 @@
     </header>
 
     <p class="tag-line" id="tag-stats">
-      지금까지 <strong><span id="tag-count">-</span>번</strong> 태그했어요 💪
+      <span id="collection-label">발견한 이미지</span>
+      <strong><span id="collection-count">-</span> / 20</strong>
+      <span id="collection-suffix"></span>
     </p>
 
     <div class="image-stage">
@@ -284,6 +286,8 @@
     };
 
     const STORAGE_KEY = "health_challenge_tag_count";
+    const SEEN_STORAGE_KEY = "health_challenge_seen_ids";
+    const COLLECTION_TOTAL = 20;
 
     function normalizeId(id) {
       const text = String(id).trim();
@@ -333,6 +337,52 @@
       return count;
     }
 
+    function loadSeenIds() {
+      try {
+        const raw = localStorage.getItem(SEEN_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed.map(normalizeId) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveSeenIds(ids) {
+      localStorage.setItem(SEEN_STORAGE_KEY, JSON.stringify(ids));
+    }
+
+    function recordSeenImage(imageId) {
+      const id = normalizeId(imageId);
+      const seen = loadSeenIds();
+      const isNew = seen.indexOf(id) === -1;
+      if (isNew) {
+        seen.push(id);
+        saveSeenIds(seen);
+      }
+      return {
+        isNew: isNew,
+        found: seen.length
+      };
+    }
+
+    function renderCollection(found, isNew) {
+      const label = document.getElementById("collection-label");
+      const count = document.getElementById("collection-count");
+      const suffix = document.getElementById("collection-suffix");
+      const complete = found >= COLLECTION_TOTAL;
+
+      count.textContent = String(found);
+
+      if (complete) {
+        label.textContent = "🎉 ";
+        suffix.textContent = " 모두 발견!";
+        return;
+      }
+
+      suffix.textContent = "";
+      label.textContent = isNew ? "NEW! " : "발견한 이미지 ";
+    }
+
     function blinkTagCount() {
       const el = document.getElementById("tag-stats");
       el.classList.remove("is-blinking");
@@ -375,7 +425,7 @@
     function renderPage(data) {
       const centerName = data.healthCenterName || CONFIG.healthCenterName;
       document.getElementById("center-name").textContent = centerName;
-      document.getElementById("tag-count").textContent = data.count;
+      renderCollection(data.found, data.isNew);
       blinkTagCount();
       showImage(data.image);
     }
@@ -418,10 +468,13 @@
 
       const count = incrementPersonalCount();
       const image = pickWeightedImage(getAvailableImages(count));
+      const collection = recordSeenImage(image.id);
 
       renderPage({
         count: count,
         image: image,
+        found: collection.found,
+        isNew: collection.isNew,
         healthCenterName: CONFIG.healthCenterName
       });
 
