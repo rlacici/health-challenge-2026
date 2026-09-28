@@ -403,6 +403,10 @@
         status.innerHTML = "20개 중 <strong>20개</strong> 모두 발견! 좋아요 !👍";
         return;
       }
+      if (mode === "keep-going") {
+        status.textContent = "모두 찾았어도 랜덤은 계속된다! 쭈욱~~👀";
+        return;
+      }
       if (mode === "wait") {
         status.textContent = "다음 이미지는 뭘까?";
         return;
@@ -427,13 +431,21 @@
         el.classList.add("is-new-find");
         collectionTimer = setTimeout(function () {
           el.classList.remove("is-new-find");
-          setCollectionText(found, complete ? "complete" : "wait");
+          if (complete) {
+            setCollectionText(found, "complete");
+            el.classList.add("is-blinking");
+            collectionTimer = setTimeout(function () {
+              setCollectionText(found, "keep-going");
+            }, 5000);
+            return;
+          }
+          setCollectionText(found, "wait");
           el.classList.add("is-blinking");
         }, 5000);
         return;
       }
 
-      setCollectionText(found, complete ? "complete" : "repeat");
+      setCollectionText(found, complete ? "keep-going" : "repeat");
       el.classList.add("is-blinking");
     }
 
@@ -505,7 +517,7 @@
 
     function registerServiceWorker() {
       if (!("serviceWorker" in navigator)) return;
-      navigator.serviceWorker.register(getBasePath() + "sw.js?v=4").catch(function () {});
+      navigator.serviceWorker.register(getBasePath() + "sw.js?v=5").catch(function () {});
     }
 
     function init() {
