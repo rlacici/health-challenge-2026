@@ -505,7 +505,7 @@
 
     function registerServiceWorker() {
       if (!("serviceWorker" in navigator)) return;
-      navigator.serviceWorker.register(getBasePath() + "sw.js").catch(function () {});
+      navigator.serviceWorker.register(getBasePath() + "sw.js?v=2").catch(function () {});
     }
 
     function init() {
