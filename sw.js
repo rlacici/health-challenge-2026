@@ -1,4 +1,4 @@
-const CACHE_NAME = "health-challenge-2026-v7";
+const CACHE_NAME = "health-challenge-2026-v8";
 
 self.addEventListener("install", function (event) {
   self.skipWaiting();
