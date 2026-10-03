@@ -145,7 +145,7 @@ function normalizeSource(source) {
 }
 
 /**
- * 통계 시트에 NFC / 올해 주소 칸만 추가합니다. 기존 숫자는 지우지 않습니다.
+ * 통계 시트에 2025년 / 2026년 태그 칸만 추가합니다. 기존 숫자는 지우지 않습니다.
  * Apps Script 편집기에서 이 함수 선택 → ▶ 실행
  */
 function addSourceColumns() {
@@ -160,17 +160,17 @@ function addSourceColumns() {
 
 function ensureSourceColumns(statsSheet) {
   statsSheet.getRange("A1").setValue("전체 태그 수");
-  statsSheet.getRange("C1").setValue("NFC(키링)");
+  statsSheet.getRange("C1").setValue("2025년 태그");
   if (statsSheet.getRange("D1").getValue() === "") {
     statsSheet.getRange("D1").setValue(0);
   }
-  statsSheet.getRange("E1").setValue("올해 주소");
+  statsSheet.getRange("E1").setValue("2026년 태그");
   if (statsSheet.getRange("F1").getValue() === "") {
     statsSheet.getRange("F1").setValue(0);
   }
-  statsSheet.getRange("C3").setValue("전체 노출");
-  statsSheet.getRange("D3").setValue("NFC 노출");
-  statsSheet.getRange("E3").setValue("올해 주소 노출");
+  statsSheet.getRange("C3").setValue("전체");
+  statsSheet.getRange("D3").setValue("2025년 태그");
+  statsSheet.getRange("E3").setValue("2026년 태그");
   statsSheet.setColumnWidth(4, 110);
   statsSheet.setColumnWidth(5, 130);
   statsSheet.setColumnWidth(6, 90);
@@ -239,11 +239,11 @@ function setupSpreadsheet() {
   stats.clear();
   stats.getRange("A1").setValue("전체 태그 수");
   stats.getRange("B1").setValue(0);
-  stats.getRange("C1").setValue("NFC(키링)");
+  stats.getRange("C1").setValue("2025년 태그");
   stats.getRange("D1").setValue(0);
-  stats.getRange("E1").setValue("올해 주소");
+  stats.getRange("E1").setValue("2026년 태그");
   stats.getRange("F1").setValue(0);
-  stats.getRange("A3:E3").setValues([["ID", "제목", "전체 노출", "NFC 노출", "올해 주소 노출"]]);
+  stats.getRange("A3:E3").setValues([["ID", "제목", "전체", "2025년 태그", "2026년 태그"]]);
 
   const statRows = DEFAULT_IMAGES.map((row) => [row[0], row[1], 0, 0, 0]);
   stats.getRange(4, 1, statRows.length, 5).setValues(statRows);
