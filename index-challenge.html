@@ -267,14 +267,13 @@
 
     .complete-overlay.is-visible {
       display: block;
-      animation: overlay-hold 5s ease-out forwards;
+      animation: overlay-pop 5s ease-out, tag-blink 1s ease-in-out 5;
     }
 
-    @keyframes overlay-hold {
-      0% { opacity: 0; transform: translateY(-50%) scale(0.96); }
-      10% { opacity: 1; transform: translateY(-50%) scale(1); }
-      85% { opacity: 1; transform: translateY(-50%) scale(1); }
-      100% { opacity: 0; transform: translateY(-50%) scale(1); }
+    @keyframes overlay-pop {
+      0% { transform: translateY(-50%) scale(0.96); }
+      12% { transform: translateY(-50%) scale(1); }
+      100% { transform: translateY(-50%) scale(1); }
     }
 
     .ai-notice {
@@ -576,7 +575,7 @@
 
     function registerServiceWorker() {
       if (!("serviceWorker" in navigator)) return;
-      navigator.serviceWorker.register(getBasePath() + "sw.js?v=8").catch(function () {});
+      navigator.serviceWorker.register(getBasePath() + "sw.js?v=9").catch(function () {});
     }
 
     function init() {
