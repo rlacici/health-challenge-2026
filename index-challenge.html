@@ -167,6 +167,10 @@
       animation: new-find-pop 5s ease-out, tag-blink 1s ease-in-out 5;
     }
 
+    .tag-line.is-new-find.is-short {
+      animation: new-find-pop 3s ease-out, tag-blink 1s ease-in-out 3;
+    }
+
     @keyframes tag-blink {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.35; }
@@ -236,6 +240,43 @@
       display: none;
     }
 
+    .complete-overlay {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      top: 50%;
+      z-index: 4;
+      display: none;
+      padding: 16px 18px;
+      border-radius: 16px;
+      background: rgba(16, 28, 48, 0.78);
+      color: var(--text-on-dark);
+      font-size: calc(1.08rem + 2pt);
+      font-weight: 700;
+      line-height: 1.4;
+      text-align: center;
+      word-break: keep-all;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .complete-overlay strong {
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .complete-overlay.is-visible {
+      display: block;
+      animation: overlay-hold 5s ease-out forwards;
+    }
+
+    @keyframes overlay-hold {
+      0% { opacity: 0; transform: translateY(-50%) scale(0.96); }
+      10% { opacity: 1; transform: translateY(-50%) scale(1); }
+      85% { opacity: 1; transform: translateY(-50%) scale(1); }
+      100% { opacity: 0; transform: translateY(-50%) scale(1); }
+    }
+
     .ai-notice {
       font-size: 8pt;
       color: var(--text-muted);
@@ -272,6 +313,9 @@
           fetchpriority="high"
         >
         <div class="image-stage__skeleton" id="skeleton"></div>
+        <div class="complete-overlay" id="complete-overlay">
+          20개 중 <strong>20개</strong> 모두 발견! 좋아요 !👍
+        </div>
       </div>
     </div>
 
@@ -387,6 +431,7 @@
     }
 
     let collectionTimer = null;
+    let overlayTimer = null;
 
     function setCollectionText(found, mode) {
       const status = document.getElementById("collection-status");
@@ -397,10 +442,6 @@
       }
       if (mode === "complete-new") {
         status.textContent = "✨모든 이미지 발견!✨";
-        return;
-      }
-      if (mode === "complete") {
-        status.innerHTML = "20개 중 <strong>20개</strong> 모두 발견! 좋아요 !👍";
         return;
       }
       if (mode === "keep-going") {
@@ -414,6 +455,23 @@
       status.innerHTML = "다시 만난 이미지! 현재 <strong>" + found + "개</strong> 발견 중!";
     }
 
+    function hideCompleteOverlay() {
+      const overlay = document.getElementById("complete-overlay");
+      overlay.classList.remove("is-visible");
+    }
+
+    function showCompleteOverlay() {
+      const overlay = document.getElementById("complete-overlay");
+      if (overlayTimer) {
+        clearTimeout(overlayTimer);
+        overlayTimer = null;
+      }
+      overlay.classList.remove("is-visible");
+      void overlay.offsetWidth;
+      overlay.classList.add("is-visible");
+      overlayTimer = setTimeout(hideCompleteOverlay, 5000);
+    }
+
     function renderCollection(found, isNew) {
       const el = document.getElementById("tag-stats");
       const complete = found >= COLLECTION_TOTAL;
@@ -422,26 +480,27 @@
         clearTimeout(collectionTimer);
         collectionTimer = null;
       }
+      if (overlayTimer) {
+        clearTimeout(overlayTimer);
+        overlayTimer = null;
+      }
+      hideCompleteOverlay();
 
-      el.classList.remove("is-blinking", "is-new-find");
+      el.classList.remove("is-blinking", "is-new-find", "is-short");
       void el.offsetWidth;
 
       if (isNew) {
         setCollectionText(found, complete ? "complete-new" : "new");
         el.classList.add("is-new-find");
+        if (complete) {
+          el.classList.add("is-short");
+          showCompleteOverlay();
+        }
         collectionTimer = setTimeout(function () {
-          el.classList.remove("is-new-find");
-          if (complete) {
-            setCollectionText(found, "complete");
-            el.classList.add("is-blinking");
-            collectionTimer = setTimeout(function () {
-              setCollectionText(found, "keep-going");
-            }, 5000);
-            return;
-          }
-          setCollectionText(found, "wait");
+          el.classList.remove("is-new-find", "is-short");
+          setCollectionText(found, complete ? "keep-going" : "wait");
           el.classList.add("is-blinking");
-        }, 5000);
+        }, complete ? 3000 : 5000);
         return;
       }
 
@@ -517,7 +576,7 @@
 
     function registerServiceWorker() {
       if (!("serviceWorker" in navigator)) return;
-      navigator.serviceWorker.register(getBasePath() + "sw.js?v=6").catch(function () {});
+      navigator.serviceWorker.register(getBasePath() + "sw.js?v=7").catch(function () {});
     }
 
     function init() {
