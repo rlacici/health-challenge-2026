@@ -144,9 +144,21 @@ function normalizeSource(source) {
   return String(source || "").trim() === "nfc" ? "nfc" : "web";
 }
 
-function ensureSourceColumns(statsSheet) {
-  if (String(statsSheet.getRange("D3").getValue()) === "NFC 노출") return;
+/**
+ * 통계 시트에 NFC / 올해 주소 칸만 추가합니다. 기존 숫자는 지우지 않습니다.
+ * Apps Script 편집기에서 이 함수 선택 → ▶ 실행
+ */
+function addSourceColumns() {
+  validateSpreadsheetId();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const statsSheet = ss.getSheetByName("통계");
+  if (!statsSheet) {
+    throw new Error("통계 시트가 없습니다. setupSpreadsheet()를 먼저 실행하세요.");
+  }
+  ensureSourceColumns(statsSheet);
+}
 
+function ensureSourceColumns(statsSheet) {
   statsSheet.getRange("A1").setValue("전체 태그 수");
   statsSheet.getRange("C1").setValue("NFC(키링)");
   if (statsSheet.getRange("D1").getValue() === "") {
