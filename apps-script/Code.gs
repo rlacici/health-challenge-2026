@@ -149,13 +149,14 @@ function normalizeSource(source) {
  * Apps Script 편집기에서 이 함수 선택 → ▶ 실행
  */
 function addSourceColumns() {
-  validateSpreadsheetId();
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById(SPREADSHEET_ID);
   const statsSheet = ss.getSheetByName("통계");
   if (!statsSheet) {
     throw new Error("통계 시트가 없습니다. setupSpreadsheet()를 먼저 실행하세요.");
   }
   ensureSourceColumns(statsSheet);
+  SpreadsheetApp.flush();
+  ss.toast("통계 시트 이름을 2025년 태그 / 2026년 태그로 바꿨습니다.", "완료", 8);
 }
 
 function ensureSourceColumns(statsSheet) {
