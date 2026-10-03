@@ -576,25 +576,12 @@
 
     function registerServiceWorker() {
       if (!("serviceWorker" in navigator)) return;
-      navigator.serviceWorker.register(getBasePath() + "sw.js?v=13").catch(function () {});
+      navigator.serviceWorker.register(getBasePath() + "sw.js?v=14").catch(function () {});
     }
 
     function init() {
       registerServiceWorker();
       document.getElementById("center-name").textContent = CONFIG.healthCenterName;
-
-      const preview = new URLSearchParams(window.location.search).get("preview");
-      if (preview === "complete") {
-        const image = CONFIG.images[CONFIG.images.length - 1];
-        renderPage({
-          count: 21,
-          image: image,
-          found: COLLECTION_TOTAL,
-          isNew: true,
-          healthCenterName: CONFIG.healthCenterName
-        });
-        return;
-      }
 
       const count = incrementPersonalCount();
       const image = pickWeightedImage(getAvailableImages(count));
