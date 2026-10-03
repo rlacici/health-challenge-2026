@@ -247,15 +247,15 @@
       top: 50%;
       z-index: 4;
       display: none;
-      padding: 16px 18px;
       border-radius: 16px;
       background: rgba(16, 28, 48, 0.78);
       color: var(--text-on-dark);
-      font-size: calc(1.08rem + 2pt);
+      font-size: calc(2.16rem + 4pt);
       font-weight: 700;
-      line-height: 1.4;
+      line-height: 1.35;
       text-align: center;
       word-break: keep-all;
+      padding: 22px 20px;
       transform: translateY(-50%);
       pointer-events: none;
     }
@@ -575,7 +575,7 @@
 
     function registerServiceWorker() {
       if (!("serviceWorker" in navigator)) return;
-      navigator.serviceWorker.register(getBasePath() + "sw.js?v=9").catch(function () {});
+      navigator.serviceWorker.register(getBasePath() + "sw.js?v=10").catch(function () {});
     }
 
     function init() {
