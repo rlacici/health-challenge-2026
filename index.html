@@ -250,7 +250,7 @@
       border-radius: 16px;
       background: rgba(16, 28, 48, 0.78);
       color: var(--text-on-dark);
-      font-size: calc(2.16rem + 4pt);
+      font-size: calc(1.42rem + 2pt);
       font-weight: 700;
       line-height: 1.35;
       text-align: center;
@@ -260,9 +260,9 @@
       pointer-events: none;
     }
 
-    .complete-overlay strong {
-      color: var(--accent);
-      font-variant-numeric: tabular-nums;
+    .complete-overlay__line {
+      display: block;
+      white-space: nowrap;
     }
 
     .complete-overlay.is-visible {
@@ -313,7 +313,8 @@
         >
         <div class="image-stage__skeleton" id="skeleton"></div>
         <div class="complete-overlay" id="complete-overlay">
-          20개 중 <strong>20개</strong> 모두 발견! 좋아요 !👍
+          <span class="complete-overlay__line">20개 중 <strong>20개</strong> 모두 발견!</span>
+          <span class="complete-overlay__line">좋아요 !👍</span>
         </div>
       </div>
     </div>
@@ -575,7 +576,7 @@
 
     function registerServiceWorker() {
       if (!("serviceWorker" in navigator)) return;
-      navigator.serviceWorker.register(getBasePath() + "sw.js?v=10").catch(function () {});
+      navigator.serviceWorker.register(getBasePath() + "sw.js?v=11").catch(function () {});
     }
 
     function init() {
