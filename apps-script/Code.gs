@@ -37,7 +37,7 @@ function doGet(e) {
   e = e || {};
   try {
     validateSpreadsheetId();
-    const result = recordTagAndPickImage(e.parameter.imageId);
+    const result = recordTagAndPickImage(e.parameter.imageId, e.parameter.source);
     return createResponse(result, e.parameter.callback);
   } catch (error) {
     return createResponse({
@@ -68,7 +68,7 @@ function validateSpreadsheetId() {
   }
 }
 
-function recordTagAndPickImage(clientImageId) {
+function recordTagAndPickImage(clientImageId, source) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const settings = ss.getSheetByName("설정");
   const imagesSheet = ss.getSheetByName("이미지");
@@ -93,8 +93,11 @@ function recordTagAndPickImage(clientImageId) {
     picked = pickWeighted(images);
   }
 
+  const tagSource = normalizeSource(source);
+  ensureSourceColumns(statsSheet);
   const newCount = incrementTotal(statsSheet);
-  incrementImageCount(statsSheet, picked.id);
+  incrementSourceTotal(statsSheet, tagSource);
+  incrementImageCount(statsSheet, picked.id, tagSource);
 
   return {
     totalCount: newCount,
@@ -137,7 +140,36 @@ function incrementTotal(statsSheet) {
   return next;
 }
 
-function incrementImageCount(statsSheet, imageId) {
+function normalizeSource(source) {
+  return String(source || "").trim() === "nfc" ? "nfc" : "web";
+}
+
+function ensureSourceColumns(statsSheet) {
+  if (String(statsSheet.getRange("D3").getValue()) === "NFC 노출") return;
+
+  statsSheet.getRange("A1").setValue("전체 태그 수");
+  statsSheet.getRange("C1").setValue("NFC(키링)");
+  if (statsSheet.getRange("D1").getValue() === "") {
+    statsSheet.getRange("D1").setValue(0);
+  }
+  statsSheet.getRange("E1").setValue("올해 주소");
+  if (statsSheet.getRange("F1").getValue() === "") {
+    statsSheet.getRange("F1").setValue(0);
+  }
+  statsSheet.getRange("C3").setValue("전체 노출");
+  statsSheet.getRange("D3").setValue("NFC 노출");
+  statsSheet.getRange("E3").setValue("올해 주소 노출");
+  statsSheet.setColumnWidth(4, 110);
+  statsSheet.setColumnWidth(5, 130);
+  statsSheet.setColumnWidth(6, 90);
+}
+
+function incrementSourceTotal(statsSheet, source) {
+  const cell = statsSheet.getRange(source === "nfc" ? "D1" : "F1");
+  cell.setValue((Number(cell.getValue()) || 0) + 1);
+}
+
+function incrementImageCount(statsSheet, imageId, source) {
   const lastRow = statsSheet.getLastRow();
   if (lastRow < 4) return;
 
@@ -147,8 +179,11 @@ function incrementImageCount(statsSheet, imageId) {
   for (let i = 0; i < ids.length; i++) {
     if (padId(ids[i][0]) === targetId) {
       const row = i + 4;
-      const countCell = statsSheet.getRange(row, 3);
-      countCell.setValue((Number(countCell.getValue()) || 0) + 1);
+      const totalCell = statsSheet.getRange(row, 3);
+      totalCell.setValue((Number(totalCell.getValue()) || 0) + 1);
+      const sourceCol = source === "nfc" ? 4 : 5;
+      const sourceCell = statsSheet.getRange(row, sourceCol);
+      sourceCell.setValue((Number(sourceCell.getValue()) || 0) + 1);
       return;
     }
   }
@@ -190,16 +225,22 @@ function setupSpreadsheet() {
   let stats = ss.getSheetByName("통계");
   if (!stats) stats = ss.insertSheet("통계");
   stats.clear();
-  stats.getRange("A1").setValue("누적 태그 수");
+  stats.getRange("A1").setValue("전체 태그 수");
   stats.getRange("B1").setValue(0);
-  stats.getRange("A3:C3").setValues([["ID", "제목", "노출 횟수"]]);
+  stats.getRange("C1").setValue("NFC(키링)");
+  stats.getRange("D1").setValue(0);
+  stats.getRange("E1").setValue("올해 주소");
+  stats.getRange("F1").setValue(0);
+  stats.getRange("A3:E3").setValues([["ID", "제목", "전체 노출", "NFC 노출", "올해 주소 노출"]]);
 
-  const statRows = DEFAULT_IMAGES.map((row) => [row[0], row[1], 0]);
-  stats.getRange(4, 1, statRows.length, 3).setValues(statRows);
+  const statRows = DEFAULT_IMAGES.map((row) => [row[0], row[1], 0, 0, 0]);
+  stats.getRange(4, 1, statRows.length, 5).setValues(statRows);
   stats.setFrozenRows(3);
   stats.setColumnWidth(1, 60);
   stats.setColumnWidth(2, 220);
   stats.setColumnWidth(3, 100);
+  stats.setColumnWidth(4, 110);
+  stats.setColumnWidth(5, 130);
 
   const defaultSheet = ss.getSheetByName("시트1");
   if (defaultSheet && ss.getSheets().length > 3) {

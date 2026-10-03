@@ -547,6 +547,11 @@
       showImage(data.image);
     }
 
+    function getTagSource() {
+      const path = window.location.pathname || "";
+      return path.indexOf("oral-health") !== -1 ? "nfc" : "web";
+    }
+
     function recordTagInBackground(imageId) {
       if (!CONFIG.appsScriptUrl) return;
 
@@ -564,6 +569,7 @@
       script.src = CONFIG.appsScriptUrl
         + "?callback=" + callbackName
         + "&imageId=" + encodeURIComponent(normalizeId(imageId))
+        + "&source=" + encodeURIComponent(getTagSource())
         + "&t=" + Date.now();
       script.onerror = function () {
         delete window[callbackName];
@@ -576,7 +582,7 @@
 
     function registerServiceWorker() {
       if (!("serviceWorker" in navigator)) return;
-      navigator.serviceWorker.register(getBasePath() + "sw.js?v=14").catch(function () {});
+      navigator.serviceWorker.register(getBasePath() + "sw.js?v=15").catch(function () {});
     }
 
     function init() {
