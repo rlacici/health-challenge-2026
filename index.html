@@ -313,7 +313,7 @@
         >
         <div class="image-stage__skeleton" id="skeleton"></div>
         <div class="complete-overlay" id="complete-overlay">
-          <span class="complete-overlay__line">20개 중 <strong>20개</strong> 모두 발견!</span>
+          <span class="complete-overlay__line"><strong>20개</strong> 이미지 모두 발견!</span>
           <span class="complete-overlay__line">좋아요 !👍</span>
         </div>
       </div>
@@ -576,7 +576,7 @@
 
     function registerServiceWorker() {
       if (!("serviceWorker" in navigator)) return;
-      navigator.serviceWorker.register(getBasePath() + "sw.js?v=11").catch(function () {});
+      navigator.serviceWorker.register(getBasePath() + "sw.js?v=12").catch(function () {});
     }
 
     function init() {
