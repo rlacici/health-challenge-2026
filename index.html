@@ -421,7 +421,9 @@
         return;
       }
       localStorage.setItem(GIFT_OPENS_KEY, String(getGiftOpens() + 1));
-      const ret = encodeURIComponent(window.location.origin + window.location.pathname);
+      let path = window.location.pathname.replace(/complete-preview\.html$/i, "");
+      if (!path.endsWith("/")) path = path.replace(/[^/]*$/, "");
+      const ret = encodeURIComponent(window.location.origin + path);
       window.location.href = CONFIG.giftGameUrl + "&return=" + ret;
     }
 
@@ -693,6 +695,12 @@
         }).catch(function () {});
       }
     }
+
+    window.addEventListener("pageshow", function (event) {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    });
 
     function init() {
       registerServiceWorker();

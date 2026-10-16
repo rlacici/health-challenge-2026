@@ -237,7 +237,9 @@
     giftBtn.addEventListener("click", function () {
       if (getGiftOpens() >= GIFT_MAX) return;
       localStorage.setItem(GIFT_OPENS_KEY, String(getGiftOpens() + 1));
-      const ret = encodeURIComponent(window.location.origin + window.location.pathname);
+      let path = window.location.pathname.replace(/complete-preview\.html$/i, "");
+      if (!path.endsWith("/")) path = path.replace(/[^/]*$/, "");
+      const ret = encodeURIComponent(window.location.origin + path);
       window.location.href = "https://rlacici.github.io/tap-tap-30s/?from=keyring&return=" + ret;
     });
   </script>
