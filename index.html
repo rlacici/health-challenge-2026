@@ -226,27 +226,43 @@
       top: 50%;
       z-index: 4;
       display: none;
-      border-radius: 16px;
-      background: rgba(16, 28, 48, 0.78);
+      border-radius: 18px;
+      background: rgba(16, 28, 48, 0.86);
       color: var(--text-on-dark);
-      font-size: calc(1.42rem + 2pt);
+      font-size: 15px;
       font-weight: 700;
-      line-height: 1.35;
+      line-height: 1.45;
       text-align: center;
       word-break: keep-all;
-      padding: 22px 20px;
+      padding: 26px 16px 22px;
       transform: translateY(-50%);
-      pointer-events: none;
+      pointer-events: auto;
     }
 
     .complete-overlay__line {
       display: block;
       white-space: nowrap;
+      margin: 0 0 8px;
+    }
+
+    .complete-overlay__gift {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 12px 22px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #1A2B4A;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
     }
 
     .complete-overlay.is-visible {
       display: block;
-      animation: overlay-pop 5s ease-out, tag-blink 1s ease-in-out 5;
+      animation: overlay-pop 0.45s ease-out;
     }
 
     @keyframes overlay-pop {
@@ -292,8 +308,11 @@
         >
         <div class="image-stage__skeleton" id="skeleton"></div>
         <div class="complete-overlay" id="complete-overlay">
-          <span class="complete-overlay__line"><strong>20개</strong> 이미지 모두 발견!</span>
-          <span class="complete-overlay__line">좋아요 !👍</span>
+          <span class="complete-overlay__line">그런데 여기서 끝인 줄 알았죠? ㅋㅋ</span>
+          <span class="complete-overlay__line">🎁 20개를 모두 찾은 특별 선물이 기다리고 있어요!</span>
+          <span class="complete-overlay__line">키링은 앞으로도 계속 태그해 보세요.</span>
+          <span class="complete-overlay__line">이미지와 함께 매번 랜덤 한마디가 나타나요!</span>
+          <button type="button" class="complete-overlay__gift" id="gift-open-btn">선물 열어보기</button>
         </div>
       </div>
     </div>
@@ -305,6 +324,7 @@
     const CONFIG = {
       healthCenterName: "🦷 미추홀구 보건소와 함께해요!",
       appsScriptUrl: "https://script.google.com/macros/s/AKfycbzUQCQP5co3iV3PCqtsu5gz6Zf4kc3DSdjiATTN2OsPRDSpfcXCC88vp6WDowO42ZRkgw/exec",
+      giftGameUrl: "https://rlacici.github.io/tap-tap-30s/?from=keyring",
       images: [
         { id: "01", src: "images/01.jpg", weight: 2, alt: "그냥 다 귀찮음" },
         { id: "02", src: "images/02c.jpg", weight: 2, alt: "충치는 연락 없이 옴" },
@@ -439,16 +459,31 @@
       overlay.classList.remove("is-visible");
     }
 
+    function fitOverlayLines() {
+      const overlay = document.getElementById("complete-overlay");
+      const lines = overlay.querySelectorAll(".complete-overlay__line");
+      const maxWidth = overlay.clientWidth - 8;
+      let size = 16;
+      lines.forEach(function (line) {
+        line.style.fontSize = "";
+      });
+      while (size >= 10) {
+        let fits = true;
+        lines.forEach(function (line) {
+          line.style.fontSize = size + "px";
+          if (line.scrollWidth > maxWidth) fits = false;
+        });
+        if (fits) break;
+        size -= 0.5;
+      }
+    }
+
     function showCompleteOverlay() {
       const overlay = document.getElementById("complete-overlay");
-      if (overlayTimer) {
-        clearTimeout(overlayTimer);
-        overlayTimer = null;
-      }
       overlay.classList.remove("is-visible");
       void overlay.offsetWidth;
       overlay.classList.add("is-visible");
-      overlayTimer = setTimeout(hideCompleteOverlay, 5000);
+      fitOverlayLines();
     }
 
     function renderCollection(found, isNew) {
@@ -473,12 +508,14 @@
         el.classList.add("is-new-find");
         if (complete) {
           el.classList.add("is-short");
-          showCompleteOverlay();
         }
         collectionTimer = setTimeout(function () {
           el.classList.remove("is-new-find", "is-short");
           setCollectionText(found, complete ? "keep-going" : "wait");
           el.classList.add("is-blinking");
+          if (complete) {
+            showCompleteOverlay();
+          }
         }, complete ? 3000 : 5000);
         return;
       }
@@ -581,6 +618,9 @@
     function init() {
       registerServiceWorker();
       document.getElementById("center-name").textContent = CONFIG.healthCenterName;
+      document.getElementById("gift-open-btn").addEventListener("click", function () {
+        window.location.href = CONFIG.giftGameUrl;
+      });
 
       const count = incrementPersonalCount();
       const image = pickWeightedImage(getAvailableImages(count));
