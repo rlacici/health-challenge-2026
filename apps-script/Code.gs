@@ -2,8 +2,11 @@
  * 2026 청소년 구강건강 챌린지 — Google Apps Script
  *
  * [최초 1회] Apps Script 편집기에서 setupSpreadsheet 실행 → 시트 자동 생성
- * [배포] 배포 > 새 배포 > 웹 앱 (액세스: 모든 사용자)
- * [연결] 배포 URL을 index-challenge.html 의 CONFIG.appsScriptUrl 에 입력
+ * [주의] 통계가 있는 뒤에는 setupSpreadsheet 를 다시 실행하지 마세요. 횟수가 지워집니다.
+ * [집계] 태그는 이미지별 2025/2026 칸만 +1. 맨 위 전체·연도 합계는 시트 함수.
+ * [1회 실행] 붙여 넣은 뒤 useSumFormulas 실행
+ * [배포] 이미 배포한 뒤 코드만 바꿀 때는 「새 배포」 금지.
+ *         배포 > 배포 관리 > 기존 웹 앱 연필 > 버전을 새 버전으로 > 배포
  */
 
 const SPREADSHEET_ID = "1h6WU1UPvdDNji57uPqdD3vGv3pjF9iJ4F8R8uT44n3g";
@@ -94,16 +97,26 @@ function recordTagAndPickImage(clientImageId, source) {
   }
 
   const tagSource = normalizeSource(source);
-  ensureSourceColumns(statsSheet);
-  const newCount = incrementTotal(statsSheet);
-  incrementSourceTotal(statsSheet, tagSource);
-  incrementImageCount(statsSheet, picked.id, tagSource);
 
-  return {
-    totalCount: newCount,
-    imageId: picked.id,
-    healthCenterName: String(settings.getRange("B1").getValue() || DEFAULT_HEALTH_CENTER)
-  };
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    SpreadsheetApp.flush();
+    ensureSumFormulas(statsSheet);
+    incrementImageCount(statsSheet, picked.id, tagSource);
+    settings.getRange("A2").setValue("마지막 태그");
+    settings.getRange("B2").setValue(new Date());
+    SpreadsheetApp.flush();
+
+    return {
+      totalCount: Number(statsSheet.getRange("B1").getDisplayValue()) || 0,
+      imageId: picked.id,
+      countMode: "column-sum",
+      healthCenterName: String(settings.getRange("B1").getValue() || DEFAULT_HEALTH_CENTER)
+    };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function getImageList(sheet) {
@@ -132,54 +145,65 @@ function pickWeighted(images) {
   return images[images.length - 1];
 }
 
-function incrementTotal(statsSheet) {
-  const cell = statsSheet.getRange("B1");
-  const current = Number(cell.getValue()) || 0;
-  const next = current + 1;
-  cell.setValue(next);
-  return next;
-}
-
 function normalizeSource(source) {
   return String(source || "").trim() === "nfc" ? "nfc" : "web";
 }
 
 /**
- * 통계 시트에 2025년 / 2026년 태그 칸만 추가합니다. 기존 숫자는 지우지 않습니다.
+ * 전체·연도 합계를 시트 함수로 바꿉니다. 이미지별 2025/2026 숫자는 지우지 않습니다.
  * Apps Script 편집기에서 이 함수 선택 → ▶ 실행
  */
-function addSourceColumns() {
+function useSumFormulas() {
   const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById(SPREADSHEET_ID);
   const statsSheet = ss.getSheetByName("통계");
   if (!statsSheet) {
     throw new Error("통계 시트가 없습니다. setupSpreadsheet()를 먼저 실행하세요.");
   }
-  ensureSourceColumns(statsSheet);
+  ensureSumFormulas(statsSheet);
   SpreadsheetApp.flush();
-  ss.toast("통계 시트 이름을 2025년 태그 / 2026년 태그로 바꿨습니다.", "완료", 8);
+  ss.toast("이미지 표에서 전체 열을 빼고, 맨 위 합계만 함수로 두었습니다.", "완료", 8);
 }
 
-function ensureSourceColumns(statsSheet) {
+function addSourceColumns() {
+  useSumFormulas();
+}
+
+function ensureSumFormulas(statsSheet) {
+  migrateAwayFromTotalColumn(statsSheet);
+
   statsSheet.getRange("A1").setValue("전체 태그 수");
-  statsSheet.getRange("C1").setValue("2025년 태그");
-  if (statsSheet.getRange("D1").getValue() === "") {
-    statsSheet.getRange("D1").setValue(0);
-  }
-  statsSheet.getRange("E1").setValue("2026년 태그");
-  if (statsSheet.getRange("F1").getValue() === "") {
-    statsSheet.getRange("F1").setValue(0);
-  }
-  statsSheet.getRange("C3").setValue("전체");
-  statsSheet.getRange("D3").setValue("2025년 태그");
-  statsSheet.getRange("E3").setValue("2026년 태그");
-  statsSheet.setColumnWidth(4, 110);
-  statsSheet.setColumnWidth(5, 130);
-  statsSheet.setColumnWidth(6, 90);
+  statsSheet.getRange("A3:D3").setValues([["ID", "제목", "2025년 태그", "2026년 태그"]]);
+  statsSheet.getRange("E1:F1").clearContent();
+  statsSheet.getRange("E3").clearContent();
+  // 합계는 각 열 바로 위. C1=2025합, D1=2026합, B1=둘의 합. SUM(C:C) 는 순환 오류가 납니다.
+  statsSheet.getRange("C1").setFormula("=SUM(C4:C100)");
+  statsSheet.getRange("D1").setFormula("=SUM(D4:D100)");
+  statsSheet.getRange("B1").setFormula("=N(C1)+N(D1)");
+  statsSheet.setColumnWidth(3, 110);
+  statsSheet.setColumnWidth(4, 130);
 }
 
-function incrementSourceTotal(statsSheet, source) {
-  const cell = statsSheet.getRange(source === "nfc" ? "D1" : "F1");
-  cell.setValue((Number(cell.getValue()) || 0) + 1);
+/**
+ * 예전에 있던 이미지 「전체」열(C)을 빼고, 2025→C / 2026→D 로 옮깁니다.
+ */
+function migrateAwayFromTotalColumn(statsSheet) {
+  const headerC = String(statsSheet.getRange("C3").getValue());
+  const headerE = String(statsSheet.getRange("E3").getValue());
+  const alreadyNew = headerC.indexOf("2025") >= 0 && String(statsSheet.getRange("D3").getValue()).indexOf("2026") >= 0;
+  if (alreadyNew) return;
+
+  const oldLayout = headerC.indexOf("전체") >= 0 || headerE.indexOf("2026") >= 0;
+  if (!oldLayout) return;
+
+  const lastRow = statsSheet.getLastRow();
+  if (lastRow >= 4) {
+    const count = lastRow - 3;
+    const year2025 = statsSheet.getRange(4, 4, count, 1).getValues();
+    const year2026 = statsSheet.getRange(4, 5, count, 1).getValues();
+    statsSheet.getRange(4, 3, count, 1).setValues(year2025);
+    statsSheet.getRange(4, 4, count, 1).setValues(year2026);
+    statsSheet.getRange(4, 5, count, 1).clearContent();
+  }
 }
 
 function incrementImageCount(statsSheet, imageId, source) {
@@ -188,15 +212,12 @@ function incrementImageCount(statsSheet, imageId, source) {
 
   const ids = statsSheet.getRange(4, 1, lastRow - 3, 1).getValues();
   const targetId = padId(imageId);
+  const sourceCol = source === "nfc" ? 3 : 4;
 
   for (let i = 0; i < ids.length; i++) {
     if (padId(ids[i][0]) === targetId) {
-      const row = i + 4;
-      const totalCell = statsSheet.getRange(row, 3);
-      totalCell.setValue((Number(totalCell.getValue()) || 0) + 1);
-      const sourceCol = source === "nfc" ? 4 : 5;
-      const sourceCell = statsSheet.getRange(row, sourceCol);
-      sourceCell.setValue((Number(sourceCell.getValue()) || 0) + 1);
+      const cell = statsSheet.getRange(i + 4, sourceCol);
+      cell.setValue((Number(cell.getValue()) || 0) + 1);
       return;
     }
   }
@@ -239,21 +260,18 @@ function setupSpreadsheet() {
   if (!stats) stats = ss.insertSheet("통계");
   stats.clear();
   stats.getRange("A1").setValue("전체 태그 수");
-  stats.getRange("B1").setValue(0);
   stats.getRange("C1").setValue("2025년 태그");
-  stats.getRange("D1").setValue(0);
   stats.getRange("E1").setValue("2026년 태그");
-  stats.getRange("F1").setValue(0);
-  stats.getRange("A3:E3").setValues([["ID", "제목", "전체", "2025년 태그", "2026년 태그"]]);
+  stats.getRange("A3:D3").setValues([["ID", "제목", "2025년 태그", "2026년 태그"]]);
 
-  const statRows = DEFAULT_IMAGES.map((row) => [row[0], row[1], 0, 0, 0]);
-  stats.getRange(4, 1, statRows.length, 5).setValues(statRows);
+  const statRows = DEFAULT_IMAGES.map((row) => [row[0], row[1], 0, 0]);
+  stats.getRange(4, 1, statRows.length, 4).setValues(statRows);
+  ensureSumFormulas(stats);
   stats.setFrozenRows(3);
   stats.setColumnWidth(1, 60);
   stats.setColumnWidth(2, 220);
-  stats.setColumnWidth(3, 100);
-  stats.setColumnWidth(4, 110);
-  stats.setColumnWidth(5, 130);
+  stats.setColumnWidth(3, 110);
+  stats.setColumnWidth(4, 130);
 
   const defaultSheet = ss.getSheetByName("시트1");
   if (defaultSheet && ss.getSheets().length > 3) {
@@ -263,7 +281,7 @@ function setupSpreadsheet() {
 
 /**
  * 제목이 깨졌을 때 복구: 이미지 시트 제목 → 통계 시트 B열
- * 노출 횟수(C열)·누적 태그(B1)는 그대로 둡니다.
+ * 이미지별 2025/2026 횟수와 맨 위 합계는 그대로 둡니다.
  * Apps Script 편집기에서 1회 실행
  */
 function repairSpreadsheet() {
