@@ -274,25 +274,6 @@
       cursor: default;
     }
 
-    .gift-again {
-      display: none;
-      margin: 0 0 8px;
-      padding: 8px 16px;
-      border: 0;
-      border-radius: 999px;
-      background: var(--accent);
-      color: #1A2B4A;
-      font-size: 14px;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      animation: gift-pulse 1.2s ease-in-out infinite;
-    }
-
-    .gift-again.is-visible {
-      display: inline-block;
-    }
-
     .complete-overlay.is-visible {
       display: block;
       animation: overlay-pop 0.45s ease-out;
@@ -328,7 +309,6 @@
     <p class="tag-line" id="tag-stats">
       <span id="collection-status"></span>
     </p>
-    <button type="button" class="gift-again" id="gift-again-btn">🎁 선물 열어보기</button>
 
     <div class="image-stage">
       <div class="image-frame">
@@ -400,13 +380,10 @@
 
     function paintGiftButtons() {
       const overlayBtn = document.getElementById("gift-open-btn");
-      const againBtn = document.getElementById("gift-again-btn");
-      const remain = remainingGifts();
-      if (remain <= 0) {
+      if (remainingGifts() <= 0) {
         overlayBtn.disabled = true;
         overlayBtn.classList.add("is-used");
         overlayBtn.textContent = "선물은 모두 열었어요";
-        againBtn.classList.remove("is-visible");
       } else {
         overlayBtn.disabled = false;
         overlayBtn.classList.remove("is-used");
@@ -557,7 +534,6 @@
       overlay.classList.remove("is-visible");
       void overlay.offsetWidth;
       overlay.classList.add("is-visible");
-      document.getElementById("gift-again-btn").classList.remove("is-visible");
       paintGiftButtons();
       fitOverlayLines();
     }
@@ -598,11 +574,6 @@
 
       setCollectionText(found, complete ? "keep-going" : "repeat");
       el.classList.add("is-blinking");
-      if (complete && remainingGifts() > 0) {
-        document.getElementById("gift-again-btn").classList.add("is-visible");
-      } else {
-        document.getElementById("gift-again-btn").classList.remove("is-visible");
-      }
     }
 
     function showImage(image) {
@@ -706,7 +677,6 @@
       registerServiceWorker();
       document.getElementById("center-name").textContent = CONFIG.healthCenterName;
       document.getElementById("gift-open-btn").addEventListener("click", tryOpenGift);
-      document.getElementById("gift-again-btn").addEventListener("click", tryOpenGift);
       paintGiftButtons();
 
       const count = incrementPersonalCount();
