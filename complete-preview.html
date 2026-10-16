@@ -209,7 +209,8 @@
       fitOverlayLines();
     }, 5000);
     document.getElementById("gift-open-btn").addEventListener("click", function () {
-      window.location.href = "https://rlacici.github.io/tap-tap-30s/?from=keyring";
+      const ret = encodeURIComponent(window.location.origin + window.location.pathname);
+      window.location.href = "https://rlacici.github.io/tap-tap-30s/?from=keyring&return=" + ret;
     });
   </script>
 </body>

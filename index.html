@@ -625,7 +625,8 @@
       registerServiceWorker();
       document.getElementById("center-name").textContent = CONFIG.healthCenterName;
       document.getElementById("gift-open-btn").addEventListener("click", function () {
-        window.location.href = CONFIG.giftGameUrl;
+        const ret = encodeURIComponent(window.location.origin + window.location.pathname);
+        window.location.href = CONFIG.giftGameUrl + "&return=" + ret;
       });
 
       const count = incrementPersonalCount();
