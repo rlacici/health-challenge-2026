@@ -245,6 +245,16 @@
       margin: 0 0 8px;
     }
 
+    .complete-overlay__line--gap {
+      margin-top: 1.15em;
+    }
+
+    .complete-overlay__line--big {
+      font-size: 1.5em;
+      line-height: 1.4;
+      margin-top: 4px;
+    }
+
     .complete-overlay__gift {
       display: inline-block;
       margin-top: 14px;
@@ -323,9 +333,9 @@
         <div class="image-stage__skeleton" id="skeleton"></div>
         <div class="complete-overlay" id="complete-overlay">
           <span class="complete-overlay__line">여기서 끝인 줄 알았죠?</span>
-          <span class="complete-overlay__line">🎁 이미지를 다 찾은 사람에게 주는 깜짝 선물이 있어요!</span>
-          <span class="complete-overlay__line">그리고 키링은 앞으로도 계속 태그해 보세요.</span>
-          <span class="complete-overlay__line">이미지와 함께 매번 랜덤 한마디가 나타나요!</span>
+          <span class="complete-overlay__line">🎁 이미지를 다 찾은 사람에게 주는<br>깜짝 선물이 있어요!</span>
+          <span class="complete-overlay__line complete-overlay__line--gap">그리고 키링은 앞으로도 계속 태그해 보세요.</span>
+          <span class="complete-overlay__line complete-overlay__line--big">이미지와 함께<br>매번 랜덤 한마디가 나타나요!</span>
           <button type="button" class="complete-overlay__gift" id="gift-open-btn">선물 열어보기</button>
         </div>
       </div>
@@ -520,7 +530,8 @@
       while (size >= 10) {
         let fits = true;
         lines.forEach(function (line) {
-          line.style.fontSize = size + "px";
+          const use = line.classList.contains("complete-overlay__line--big") ? size * 1.5 : size;
+          line.style.fontSize = use + "px";
           if (line.scrollWidth > maxWidth) fits = false;
         });
         if (fits) break;
