@@ -207,7 +207,7 @@
         size -= 0.5;
       }
     }
-    const GIFT_MAX = 3;
+    const GIFT_MAX = 1;
     const GIFT_OPENS_KEY = "hc-gift-opens";
     const giftBtn = document.getElementById("gift-open-btn");
 
@@ -218,9 +218,9 @@
 
     function paintGiftButton() {
       if (getGiftOpens() >= GIFT_MAX) {
-        giftBtn.disabled = true;
-        giftBtn.classList.add("is-used");
-        giftBtn.textContent = "선물은 모두 열었어요";
+        giftBtn.hidden = true;
+      } else {
+        giftBtn.hidden = false;
       }
     }
 

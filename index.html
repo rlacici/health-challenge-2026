@@ -366,7 +366,7 @@
     const STORAGE_KEY = "health_challenge_tag_count";
     const SEEN_STORAGE_KEY = "health_challenge_seen_ids";
     const COLLECTION_TOTAL = 20;
-    const GIFT_MAX = 3;
+    const GIFT_MAX = 1;
     const GIFT_OPENS_KEY = "hc-gift-opens";
 
     function getGiftOpens() {
@@ -381,10 +381,9 @@
     function paintGiftButtons() {
       const overlayBtn = document.getElementById("gift-open-btn");
       if (remainingGifts() <= 0) {
-        overlayBtn.disabled = true;
-        overlayBtn.classList.add("is-used");
-        overlayBtn.textContent = "선물은 모두 열었어요";
+        overlayBtn.hidden = true;
       } else {
+        overlayBtn.hidden = false;
         overlayBtn.disabled = false;
         overlayBtn.classList.remove("is-used");
         overlayBtn.textContent = "선물 열어보기";
@@ -565,7 +564,7 @@
           el.classList.remove("is-new-find", "is-short");
           setCollectionText(found, complete ? "keep-going" : "wait");
           el.classList.add("is-blinking");
-          if (complete) {
+          if (complete && remainingGifts() > 0) {
             showCompleteOverlay();
           }
         }, 5000);
