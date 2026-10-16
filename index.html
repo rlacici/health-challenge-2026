@@ -147,7 +147,7 @@
     }
 
     .tag-line.is-new-find.is-short {
-      animation: new-find-pop 3s ease-out, tag-blink 1s ease-in-out 3;
+      animation: new-find-pop 5s ease-out, tag-blink 1s ease-in-out 5;
     }
 
     @keyframes tag-blink {
@@ -308,10 +308,9 @@
         >
         <div class="image-stage__skeleton" id="skeleton"></div>
         <div class="complete-overlay" id="complete-overlay">
-          <span class="complete-overlay__line">그런데 여기서 끝인 줄 알았죠? ㅋㅋ</span>
-          <span class="complete-overlay__line">🎁 20개를 모두 찾은 특별 선물이 기다리고 있어요!</span>
-          <span class="complete-overlay__line">키링은 앞으로도 계속 태그해 보세요.</span>
-          <span class="complete-overlay__line">이미지와 함께 매번 랜덤 한마디가 나타나요!</span>
+          <span class="complete-overlay__line">여기서 끝인 줄 알았죠?</span>
+          <span class="complete-overlay__line">20개 다 찾은 사람에게 주는 깜짝 선물이 있어요!</span>
+          <span class="complete-overlay__line">그리고 키링은 앞으로도 계속 태그해 보세요.</span>
           <button type="button" class="complete-overlay__gift" id="gift-open-btn">선물 열어보기</button>
         </div>
       </div>
@@ -516,7 +515,7 @@
           if (complete) {
             showCompleteOverlay();
           }
-        }, complete ? 3000 : 5000);
+        }, 5000);
         return;
       }
 

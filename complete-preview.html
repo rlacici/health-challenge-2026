@@ -69,7 +69,7 @@
       font-size: calc(1.32rem + 1.5pt);
       font-weight: 700;
       color: var(--text-on-dark);
-      animation: new-find-pop 3s ease-out, tag-blink 1s ease-in-out 3;
+      animation: new-find-pop 5s ease-out, tag-blink 1s ease-in-out 5;
     }
     .tag-line.is-blinking { animation: tag-blink 1s ease-in-out infinite; }
     @keyframes tag-blink {
@@ -166,10 +166,9 @@
       <div class="image-frame">
         <img class="image-stage__img" src="images/01.jpg" alt="">
         <div class="complete-overlay" id="complete-overlay">
-          <span class="complete-overlay__line">그런데 여기서 끝인 줄 알았죠? ㅋㅋ</span>
-          <span class="complete-overlay__line">🎁 20개를 모두 찾은 특별 선물이 기다리고 있어요!</span>
-          <span class="complete-overlay__line">키링은 앞으로도 계속 태그해 보세요.</span>
-          <span class="complete-overlay__line">이미지와 함께 매번 랜덤 한마디가 나타나요!</span>
+          <span class="complete-overlay__line">여기서 끝인 줄 알았죠?</span>
+          <span class="complete-overlay__line">20개 다 찾은 사람에게 주는 깜짝 선물이 있어요!</span>
+          <span class="complete-overlay__line">그리고 키링은 앞으로도 계속 태그해 보세요.</span>
           <button type="button" class="complete-overlay__gift" id="gift-open-btn">선물 열어보기</button>
         </div>
       </div>
@@ -200,7 +199,7 @@
       status.classList.add("is-blinking");
       overlay.classList.add("is-visible");
       fitOverlayLines();
-    }, 3000);
+    }, 5000);
     document.getElementById("gift-open-btn").addEventListener("click", function () {
       window.location.href = "https://rlacici.github.io/tap-tap-30s/?from=keyring";
     });
