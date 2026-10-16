@@ -136,6 +136,13 @@
       font-weight: 700;
       font-family: inherit;
       cursor: pointer;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+      animation: gift-pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes gift-pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22); }
+      50% { transform: scale(1.07); box-shadow: 0 8px 22px rgba(255, 209, 102, 0.45); }
     }
     .complete-overlay.is-visible {
       display: block;
