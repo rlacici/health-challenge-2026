@@ -144,6 +144,14 @@
       0%, 100% { transform: scale(1); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22); }
       50% { transform: scale(1.07); box-shadow: 0 8px 22px rgba(255, 209, 102, 0.45); }
     }
+
+    .complete-overlay__gift.is-used {
+      animation: none;
+      background: #c5cdd8;
+      color: #4a5568;
+      box-shadow: none;
+      cursor: default;
+    }
     .complete-overlay.is-visible {
       display: block;
       animation: overlay-pop 0.45s ease-out;
@@ -199,6 +207,23 @@
         size -= 0.5;
       }
     }
+    const GIFT_MAX = 3;
+    const GIFT_OPENS_KEY = "hc-gift-opens";
+    const giftBtn = document.getElementById("gift-open-btn");
+
+    function getGiftOpens() {
+      const n = Number(localStorage.getItem(GIFT_OPENS_KEY) || "0");
+      return Number.isFinite(n) ? Math.max(0, n) : 0;
+    }
+
+    function paintGiftButton() {
+      if (getGiftOpens() >= GIFT_MAX) {
+        giftBtn.disabled = true;
+        giftBtn.classList.add("is-used");
+        giftBtn.textContent = "선물은 모두 열었어요";
+      }
+    }
+
     const status = document.getElementById("collection-status");
     const overlay = document.getElementById("complete-overlay");
     setTimeout(function () {
@@ -206,9 +231,12 @@
       status.textContent = "랜덤은 계속된다! 쭈욱~~👀";
       status.classList.add("is-blinking");
       overlay.classList.add("is-visible");
+      paintGiftButton();
       fitOverlayLines();
     }, 5000);
-    document.getElementById("gift-open-btn").addEventListener("click", function () {
+    giftBtn.addEventListener("click", function () {
+      if (getGiftOpens() >= GIFT_MAX) return;
+      localStorage.setItem(GIFT_OPENS_KEY, String(getGiftOpens() + 1));
       const ret = encodeURIComponent(window.location.origin + window.location.pathname);
       window.location.href = "https://rlacici.github.io/tap-tap-30s/?from=keyring&return=" + ret;
     });
