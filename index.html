@@ -802,32 +802,83 @@
       return path.indexOf("oral-health") !== -1 ? "nfc" : "web";
     }
 
-    function recordTagInBackground(imageId) {
-      if (!CONFIG.appsScriptUrl) return;
+    const PENDING_TAGS_KEY = "hc-pending-tags";
+    let pendingSend = false;
 
+    function loadPendingTags() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(PENDING_TAGS_KEY) || "[]");
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function savePendingTags(list) {
+      localStorage.setItem(PENDING_TAGS_KEY, JSON.stringify(list.slice(-40)));
+    }
+
+    function rememberTag(imageId) {
+      const item = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 10),
+        imageId: normalizeId(imageId),
+        source: getTagSource()
+      };
+      const list = loadPendingTags();
+      list.push(item);
+      savePendingTags(list);
+    }
+
+    function dropPending(ids) {
+      const seen = {};
+      ids.forEach(function (id) { seen[id] = true; });
+      savePendingTags(loadPendingTags().filter(function (item) {
+        return !seen[item.id];
+      }));
+    }
+
+    function sendPendingTags() {
+      const list = loadPendingTags().slice(0, 15);
+      if (!list.length || !CONFIG.appsScriptUrl || pendingSend) return;
+      pendingSend = true;
+      const latest = list[list.length - 1];
       const callbackName = "hc_bg_" + Date.now();
       let script;
-
-      window[callbackName] = function () {
+      function finish(data) {
+        pendingSend = false;
         delete window[callbackName];
-        if (script && script.parentNode) {
-          script.parentNode.removeChild(script);
+        if (script && script.parentNode) script.parentNode.removeChild(script);
+        let progressed = false;
+        if (data && data.saved && data.saved.length) {
+          dropPending(data.saved);
+          progressed = true;
+        } else if (data && !data.error && data.countMode !== "tag-log") {
+          dropPending([latest.id]);
+          progressed = true;
         }
-      };
-
+        if (progressed && loadPendingTags().length) sendPendingTags();
+      }
+      window[callbackName] = finish;
       script = document.createElement("script");
       script.src = CONFIG.appsScriptUrl
         + "?callback=" + callbackName
-        + "&imageId=" + encodeURIComponent(normalizeId(imageId))
-        + "&source=" + encodeURIComponent(getTagSource())
+        + "&imageId=" + encodeURIComponent(latest.imageId)
+        + "&source=" + encodeURIComponent(latest.source)
+        + "&tagId=" + encodeURIComponent(latest.id)
+        + "&batch=" + encodeURIComponent(JSON.stringify(list))
         + "&t=" + Date.now();
-      script.onerror = function () {
-        delete window[callbackName];
-        if (script && script.parentNode) {
-          script.parentNode.removeChild(script);
-        }
-      };
+      script.onerror = function () { finish(null); };
       document.head.appendChild(script);
+    }
+
+    function beaconPendingTags() {
+      const list = loadPendingTags().slice(0, 15);
+      if (!list.length || !CONFIG.appsScriptUrl || !navigator.sendBeacon) return;
+      const blob = new Blob(
+        [JSON.stringify({ tags: list })],
+        { type: "text/plain;charset=UTF-8" }
+      );
+      navigator.sendBeacon(CONFIG.appsScriptUrl, blob);
     }
 
     function registerServiceWorker() {
@@ -853,6 +904,8 @@
       }
     });
 
+    window.addEventListener("pagehide", beaconPendingTags);
+
     function init() {
       registerServiceWorker();
       document.getElementById("center-name").textContent = CONFIG.healthCenterName;
@@ -868,6 +921,7 @@
       const image = pickWeightedImage(getAvailableImages(count));
       const collection = recordSeenImage(image.id);
 
+      rememberTag(image.id);
       renderPage({
         count: count,
         image: image,
@@ -876,9 +930,7 @@
         healthCenterName: CONFIG.healthCenterName
       });
 
-      if (CONFIG.appsScriptUrl) {
-        recordTagInBackground(image.id);
-      }
+      sendPendingTags();
     }
 
     init();

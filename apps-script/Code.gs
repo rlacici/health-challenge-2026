@@ -3,7 +3,8 @@
  *
  * [최초 1회] Apps Script 편집기에서 setupSpreadsheet 실행 → 시트 자동 생성
  * [주의] 통계가 있는 뒤에는 setupSpreadsheet 를 다시 실행하지 마세요. 횟수가 지워집니다.
- * [집계] 태그는 이미지별 2025/2026 칸만 +1. 맨 위 전체·연도 합계는 시트 함수.
+ * [집계] 태그는 수신 시트에 한 줄로 쌓고, 통계 칸은 기존 횟수+수신 고유번호로 계산합니다.
+ *         같은 태그번호는 한 번만 셉니다. 숫자는 지우지 않습니다.
  * [1회 실행] 붙여 넣은 뒤 useSumFormulas 실행
  * [배포] 이미 배포한 뒤 코드만 바꿀 때는 「새 배포」 금지.
  *         배포 > 배포 관리 > 기존 웹 앱 연필 > 버전을 새 버전으로 > 배포
@@ -37,16 +38,25 @@ const DEFAULT_IMAGES = [
 const DEFAULT_HEALTH_CENTER = "🦷 미추홀구 보건소와 함께해요!";
 
 function doGet(e) {
-  e = e || {};
+  return handleTagRequest(e || {});
+}
+
+function doPost(e) {
+  return handleTagRequest(e || {});
+}
+
+function handleTagRequest(e) {
+  const callback = e.parameter && e.parameter.callback;
   try {
     validateSpreadsheetId();
-    const result = recordTagAndPickImage(e.parameter.imageId, e.parameter.source);
-    return createResponse(result, e.parameter.callback);
+    const result = recordIncomingTags(collectTags_(e));
+    return createResponse(result, callback);
   } catch (error) {
     return createResponse({
       error: true,
-      message: String(error)
-    }, e.parameter.callback);
+      message: String(error),
+      saved: []
+    }, callback);
   }
 }
 
@@ -71,52 +81,120 @@ function validateSpreadsheetId() {
   }
 }
 
-function recordTagAndPickImage(clientImageId, source) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const settings = ss.getSheetByName("설정");
-  const imagesSheet = ss.getSheetByName("이미지");
-  const statsSheet = ss.getSheetByName("통계");
-
-  if (!settings || !imagesSheet || !statsSheet) {
-    throw new Error("시트가 없습니다. setupSpreadsheet()를 먼저 실행하세요.");
+function collectTags_(e) {
+  const params = (e && e.parameter) || {};
+  let raw = [];
+  if (params.batch) {
+    try {
+      const parsed = JSON.parse(params.batch);
+      if (Array.isArray(parsed)) raw = parsed;
+    } catch (error) {
+      raw = [];
+    }
   }
-
-  const images = getImageList(imagesSheet);
-  if (!images.length) {
-    throw new Error("이미지 시트에 데이터가 없습니다.");
+  if (e && e.postData && e.postData.contents) {
+    try {
+      const body = JSON.parse(e.postData.contents);
+      if (body && Array.isArray(body.tags)) raw = raw.concat(body.tags);
+    } catch (error) {
+      raw = raw;
+    }
   }
-
-  let picked;
-  if (clientImageId) {
-    const targetId = padId(clientImageId);
-    picked = images.find(function (img) {
-      return padId(img.id) === targetId;
-    }) || pickWeighted(images);
-  } else {
-    picked = pickWeighted(images);
+  if (!raw.length && params.imageId) {
+    raw = [{ id: params.tagId || "", imageId: params.imageId, source: params.source }];
   }
+  const seen = {};
+  const tags = [];
+  raw.forEach(function (item) {
+    if (!item || !item.imageId) return;
+    const tag = {
+      id: cleanTagId_(item.id),
+      imageId: padId(item.imageId),
+      source: normalizeSource(item.source)
+    };
+    if (seen[tag.id]) return;
+    seen[tag.id] = true;
+    tags.push(tag);
+  });
+  return tags;
+}
 
-  const tagSource = normalizeSource(source);
+function cleanTagId_(value) {
+  const text = String(value || "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 40);
+  return text || Utilities.getUuid().replace(/-/g, "");
+}
+
+function recordIncomingTags(tags) {
+  if (!tags.length) {
+    return { ok: true, saved: [], countMode: "tag-log" };
+  }
 
   const lock = LockService.getScriptLock();
-  lock.waitLock(30000);
-  try {
-    SpreadsheetApp.flush();
-    ensureSumFormulas(statsSheet);
-    incrementImageCount(statsSheet, picked.id, tagSource);
-    settings.getRange("A2").setValue("마지막 태그");
-    settings.getRange("B2").setValue(new Date());
-    SpreadsheetApp.flush();
+  if (!lock.tryLock(8000)) {
+    return { error: true, message: "busy", saved: [], countMode: "tag-log" };
+  }
 
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const statsSheet = ss.getSheetByName("통계");
+    if (!statsSheet) {
+      throw new Error("통계 시트가 없습니다. setupSpreadsheet()를 먼저 실행하세요.");
+    }
+    ensureLoggedCounts_(ss, statsSheet);
+    const log = ensureReceiveSheet_(ss);
+    const rows = tags.map(function (tag) {
+      return [tag.id, tag.imageId, tag.source, new Date()];
+    });
+    log.getRange(log.getLastRow() + 1, 1, rows.length, 4).setValues(rows);
     return {
-      totalCount: Number(statsSheet.getRange("B1").getDisplayValue()) || 0,
-      imageId: picked.id,
-      countMode: "column-sum",
-      healthCenterName: String(settings.getRange("B1").getValue() || DEFAULT_HEALTH_CENTER)
+      ok: true,
+      saved: tags.map(function (tag) { return tag.id; }),
+      countMode: "tag-log"
     };
   } finally {
     lock.releaseLock();
   }
+}
+
+function ensureReceiveSheet_(ss) {
+  let sheet = ss.getSheetByName("수신");
+  if (!sheet) {
+    sheet = ss.insertSheet("수신");
+    sheet.getRange(1, 1, 1, 4).setValues([["태그번호", "이미지", "구분", "시각"]]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function ensureLoggedCounts_(ss, statsSheet) {
+  const current = String(statsSheet.getRange("C4").getFormula() || "");
+  if (current.indexOf("수신") >= 0) {
+    ensureSumFormulas(statsSheet);
+    return;
+  }
+
+  const lastRow = Math.max(statsSheet.getLastRow(), 4);
+  const count = lastRow - 3;
+  let base = ss.getSheetByName("기준");
+  if (!base) base = ss.insertSheet("기준");
+  base.getRange("A1").setValue("기존 횟수 보관. 이 시트를 지우면 숫자가 어긋납니다.");
+  const snapshot = statsSheet.getRange(4, 1, count, 4).getValues();
+  base.getRange(4, 1, count, 4).setValues(snapshot);
+
+  const formulasC = [];
+  const formulasD = [];
+  for (let i = 0; i < count; i++) {
+    const row = 4 + i;
+    formulasC.push([
+      '=N(기준!C' + row + ')+IF(A' + row + '="","",IFERROR(COUNTUNIQUE(FILTER(수신!$A$2:$A$20000,수신!$B$2:$B$20000=A' + row + ',수신!$C$2:$C$20000="nfc")),0))'
+    ]);
+    formulasD.push([
+      '=N(기준!D' + row + ')+IF(A' + row + '="","",IFERROR(COUNTUNIQUE(FILTER(수신!$A$2:$A$20000,수신!$B$2:$B$20000=A' + row + ',수신!$C$2:$C$20000="web")),0))'
+    ]);
+  }
+  statsSheet.getRange(4, 3, count, 1).setFormulas(formulasC);
+  statsSheet.getRange(4, 4, count, 1).setFormulas(formulasD);
+  ensureSumFormulas(statsSheet);
 }
 
 function getImageList(sheet) {
@@ -160,8 +238,9 @@ function useSumFormulas() {
     throw new Error("통계 시트가 없습니다. setupSpreadsheet()를 먼저 실행하세요.");
   }
   ensureSumFormulas(statsSheet);
+  ensureLoggedCounts_(ss, statsSheet);
   SpreadsheetApp.flush();
-  ss.toast("이미지 표에서 전체 열을 빼고, 맨 위 합계만 함수로 두었습니다.", "완료", 8);
+  ss.toast("기존 횟수는 기준 시트에 두고, 새 태그는 수신 시트에 쌓습니다.", "완료", 8);
 }
 
 function addSourceColumns() {
@@ -221,6 +300,11 @@ function incrementImageCount(statsSheet, imageId, source) {
       return;
     }
   }
+
+  const row = lastRow + 1;
+  statsSheet.getRange(row, 1).setValue(targetId);
+  statsSheet.getRange(row, 2).setValue(targetId === "키링" ? "키링(2025 메시지)" : targetId);
+  statsSheet.getRange(row, sourceCol).setValue(1);
 }
 
 function padId(value) {
