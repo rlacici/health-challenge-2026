@@ -17,6 +17,7 @@
       --bg-bottom: #1A2B4A;
       --primary-dark: #2558CC;
       --accent: #FFD166;
+      --ink: #1A2B4A;
       --text-muted: #A8B8D0;
       --text-on-dark: #E8EEF8;
       --safe-top: env(safe-area-inset-top, 0px);
@@ -255,17 +256,19 @@
       top: 50%;
       z-index: 4;
       display: none;
-      border-radius: 18px;
-      background: rgba(16, 28, 48, 0.86);
-      color: var(--text-on-dark);
+      border-radius: 24px;
+      background: linear-gradient(180deg, #fffdf8 0%, #fff4d8 100%);
+      color: var(--ink);
       font-size: 15px;
       font-weight: 700;
       line-height: 1.45;
       text-align: center;
       word-break: keep-all;
-      padding: 22px 14px 18px;
+      padding: 22px 16px 18px;
       transform: translateY(-50%);
       pointer-events: auto;
+      box-shadow: 0 16px 36px rgba(26, 43, 74, 0.22);
+      border: 1px solid rgba(255, 209, 102, 0.95);
     }
 
     .complete-overlay__line {
@@ -280,15 +283,21 @@
 
     .complete-overlay__line--big {
       font-size: 1.5em;
-      line-height: 1.4;
-      margin-top: 4px;
+      font-weight: 600;
+      line-height: 1.5;
+      margin-top: 2px;
+    }
+
+    .complete-overlay__line--hot {
+      color: #E10600;
+      font-weight: 700;
     }
 
     .complete-overlay__actions {
       display: flex;
       align-items: stretch;
       gap: 12px;
-      margin-top: 14px;
+      margin-top: 16px;
     }
 
     .complete-overlay__gift,
@@ -298,7 +307,6 @@
       min-height: 46px;
       margin: 0;
       padding: 10px 8px;
-      border: 0;
       border-radius: 999px;
       font-size: 14px;
       font-weight: 700;
@@ -310,21 +318,23 @@
     }
 
     .complete-overlay__gift {
+      border: 0;
       background: var(--accent);
-      color: #1A2B4A;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+      color: var(--ink);
+      box-shadow: 0 6px 16px rgba(180, 130, 20, 0.28);
       animation: gift-pulse 1.2s ease-in-out infinite;
     }
 
     .complete-overlay__continue {
-      background: rgba(255, 255, 255, 0.16);
-      color: #E8EEF8;
+      background: #fff;
+      color: var(--ink);
+      border: 1.5px solid #1A2B4A;
       box-shadow: none;
     }
 
     @keyframes gift-pulse {
-      0%, 100% { transform: scale(1); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22); }
-      50% { transform: scale(1.07); box-shadow: 0 8px 22px rgba(255, 209, 102, 0.45); }
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.07); }
     }
 
     .complete-overlay__gift.is-used {
@@ -383,12 +393,12 @@
         >
         <div class="image-stage__skeleton" id="skeleton"></div>
         <div class="complete-overlay" id="complete-overlay">
-          <span class="complete-overlay__line">여기서 끝인 줄 알았죠?</span>
-          <span class="complete-overlay__line">🎁 이미지를 다 찾은 사람에게 주는<br>깜짝 선물이 있어요!</span>
-          <span class="complete-overlay__line complete-overlay__line--gap">그리고 키링은 앞으로도 계속 태그해 보세요.</span>
-          <span class="complete-overlay__line complete-overlay__line--big">이미지와 함께<br>매번 랜덤 한마디가 나타나요!</span>
+          <span class="complete-overlay__line complete-overlay__line--big">😉 여기서 끝인 줄 알았죠?</span>
+          <span class="complete-overlay__line complete-overlay__line--big complete-overlay__line--hot">키링은 앞으로도 계속 태그해 보세요.</span>
+          <span class="complete-overlay__line complete-overlay__line--big complete-overlay__line--hot">이미지와 함께<br>매번 랜덤 한마디가 나타나요!</span>
+          <span class="complete-overlay__line complete-overlay__line--big complete-overlay__line--gap">그리고 또 하나!<br>🎁 이미지를 다 찾았다면<br>특별한 도전이 기다려요!</span>
           <div class="complete-overlay__actions">
-            <button type="button" class="complete-overlay__gift" id="gift-open-btn">선물 열어보기</button>
+            <button type="button" class="complete-overlay__gift" id="gift-open-btn">🎁 도전 시작하기</button>
             <button type="button" class="complete-overlay__continue" id="gift-continue-btn">태그 계속하기</button>
           </div>
         </div>
@@ -552,7 +562,7 @@
         overlayBtn.hidden = false;
         overlayBtn.disabled = false;
         overlayBtn.classList.remove("is-used");
-        overlayBtn.textContent = "선물 열어보기";
+        overlayBtn.textContent = "🎁 도전 시작하기";
       }
     }
 
@@ -688,7 +698,9 @@
     function fitOverlayLines() {
       const overlay = document.getElementById("complete-overlay");
       const lines = overlay.querySelectorAll(".complete-overlay__line");
-      const maxWidth = overlay.clientWidth - 8;
+      const style = getComputedStyle(overlay);
+      const padX = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
+      const maxWidth = overlay.clientWidth - padX;
       let size = 16;
       lines.forEach(function (line) {
         line.style.fontSize = "";
