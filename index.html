@@ -429,6 +429,19 @@
     const COLLECTION_TOTAL = 20;
     const GIFT_MAX = 1;
     const GIFT_OPENS_KEY = "hc-gift-opens";
+    const COMPLETE_PENDING_KEY = "hc-complete-pending";
+
+    function isCompletePending() {
+      return localStorage.getItem(COMPLETE_PENDING_KEY) === "1";
+    }
+
+    function setCompletePending() {
+      localStorage.setItem(COMPLETE_PENDING_KEY, "1");
+    }
+
+    function clearCompletePending() {
+      localStorage.removeItem(COMPLETE_PENDING_KEY);
+    }
     const KEEP_GOING_LAST_KEY = "hc-keep-going-last";
     const KEEP_GOING_QUOTES = [
       "폰은 하루에도 몇 번씩 보면서 칫솔은요?",
@@ -536,6 +549,7 @@
     }
 
     function tryOpenGift() {
+      clearCompletePending();
       if (remainingGifts() <= 0) {
         hideCompleteOverlay();
         paintGiftButtons();
@@ -709,11 +723,23 @@
       el.classList.remove("is-blinking", "is-new-find", "is-short");
       void el.offsetWidth;
 
+      if (isCompletePending() && remainingGifts() <= 0) {
+        clearCompletePending();
+      }
+
+      if (isCompletePending()) {
+        setCollectionText(found, "keep-going");
+        el.classList.add("is-blinking");
+        showCompleteOverlay();
+        return;
+      }
+
       if (isNew) {
         setCollectionText(found, complete ? "complete-new" : "new");
         el.classList.add("is-new-find");
         if (complete) {
           el.classList.add("is-short");
+          if (remainingGifts() > 0) setCompletePending();
         }
         collectionTimer = setTimeout(function () {
           el.classList.remove("is-new-find", "is-short");
@@ -831,7 +857,10 @@
       registerServiceWorker();
       document.getElementById("center-name").textContent = CONFIG.healthCenterName;
       document.getElementById("gift-open-btn").addEventListener("click", tryOpenGift);
-      document.getElementById("gift-close-btn").addEventListener("click", hideCompleteOverlay);
+      document.getElementById("gift-close-btn").addEventListener("click", function () {
+        clearCompletePending();
+        hideCompleteOverlay();
+      });
       window.addEventListener("resize", fitKeepGoingQuote);
       paintGiftButtons();
 
