@@ -160,40 +160,46 @@ function ensureReceiveSheet_(ss) {
   let sheet = ss.getSheetByName("수신");
   if (!sheet) {
     sheet = ss.insertSheet("수신");
-    sheet.getRange(1, 1, 1, 4).setValues([["태그번호", "이미지", "구분", "시각"]]);
+    sheet.getRange(1, 1, 1, 4).setValues([["중복방지번호", "이미지", "구분", "시각"]]);
     sheet.setFrozenRows(1);
+  } else if (String(sheet.getRange("A1").getValue()) === "태그번호") {
+    sheet.getRange("A1").setValue("중복방지번호");
   }
   return sheet;
 }
 
+function yearCountFormula_(row, baselineCol, source) {
+  return '=N(기준!' + baselineCol + row + ')+IF(A' + row + '="";"";IFERROR(COUNTUNIQUE(FILTER(수신!$A$2:$A$20000;수신!$B$2:$B$20000=A' + row + ';수신!$C$2:$C$20000="' + source + '"));0))';
+}
+
 function ensureLoggedCounts_(ss, statsSheet) {
   const current = String(statsSheet.getRange("C4").getFormula() || "");
-  if (current.indexOf("수신") >= 0) {
+  const hasLogFormula = current.indexOf("수신") >= 0;
+  if (hasLogFormula && String(statsSheet.getRange("Z1").getValue()) === "v2") {
     ensureSumFormulas(statsSheet);
     return;
   }
 
   const lastRow = Math.max(statsSheet.getLastRow(), 4);
   const count = lastRow - 3;
-  let base = ss.getSheetByName("기준");
-  if (!base) base = ss.insertSheet("기준");
-  base.getRange("A1").setValue("기존 횟수 보관. 이 시트를 지우면 숫자가 어긋납니다.");
-  const snapshot = statsSheet.getRange(4, 1, count, 4).getValues();
-  base.getRange(4, 1, count, 4).setValues(snapshot);
+  if (!hasLogFormula) {
+    let base = ss.getSheetByName("기준");
+    if (!base) base = ss.insertSheet("기준");
+    base.getRange("A1").setValue("기존 횟수 보관. 이 시트를 지우면 숫자가 어긋납니다.");
+    const snapshot = statsSheet.getRange(4, 1, count, 4).getValues();
+    base.getRange(4, 1, count, 4).setValues(snapshot);
+  }
 
   const formulasC = [];
   const formulasD = [];
   for (let i = 0; i < count; i++) {
     const row = 4 + i;
-    formulasC.push([
-      '=N(기준!C' + row + ')+IF(A' + row + '="","",IFERROR(COUNTUNIQUE(FILTER(수신!$A$2:$A$20000,수신!$B$2:$B$20000=A' + row + ',수신!$C$2:$C$20000="nfc")),0))'
-    ]);
-    formulasD.push([
-      '=N(기준!D' + row + ')+IF(A' + row + '="","",IFERROR(COUNTUNIQUE(FILTER(수신!$A$2:$A$20000,수신!$B$2:$B$20000=A' + row + ',수신!$C$2:$C$20000="web")),0))'
-    ]);
+    formulasC.push([yearCountFormula_(row, "C", "nfc")]);
+    formulasD.push([yearCountFormula_(row, "D", "web")]);
   }
   statsSheet.getRange(4, 3, count, 1).setFormulas(formulasC);
   statsSheet.getRange(4, 4, count, 1).setFormulas(formulasD);
+  statsSheet.getRange("Z1").setValue("v2");
   ensureSumFormulas(statsSheet);
 }
 
