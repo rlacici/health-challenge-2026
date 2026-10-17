@@ -116,28 +116,8 @@
       font-weight: 700;
       line-height: 1.45;
       text-align: center;
-      padding: 36px 16px 22px;
+      padding: 22px 14px 18px;
       transform: translateY(-50%);
-    }
-    .complete-overlay__close {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 26px;
-      height: 26px;
-      padding: 0;
-      border: 0;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.18);
-      color: #E8EEF8;
-      font-size: 15px;
-      font-weight: 700;
-      font-family: inherit;
-      line-height: 1;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
     .complete-overlay__line {
       display: block;
@@ -154,20 +134,39 @@
       line-height: 1.4;
       margin-top: 4px;
     }
-    .complete-overlay__gift {
-      display: inline-block;
+    .complete-overlay__actions {
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
       margin-top: 14px;
-      padding: 12px 22px;
+    }
+    .complete-overlay__gift,
+    .complete-overlay__continue {
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 46px;
+      margin: 0;
+      padding: 10px 8px;
       border: 0;
       border-radius: 999px;
-      background: var(--accent);
-      color: #1A2B4A;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
       font-family: inherit;
+      line-height: 1.25;
+      letter-spacing: -0.03em;
+      white-space: nowrap;
       cursor: pointer;
+    }
+    .complete-overlay__gift {
+      background: var(--accent);
+      color: #1A2B4A;
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
       animation: gift-pulse 1.2s ease-in-out infinite;
+    }
+    .complete-overlay__continue {
+      background: rgba(255, 255, 255, 0.16);
+      color: #E8EEF8;
+      box-shadow: none;
     }
 
     @keyframes gift-pulse {
@@ -211,12 +210,14 @@
       <div class="image-frame">
         <img class="image-stage__img" src="images/01.jpg" alt="">
         <div class="complete-overlay" id="complete-overlay">
-          <button type="button" class="complete-overlay__close" id="gift-close-btn" aria-label="나가기">×</button>
           <span class="complete-overlay__line">여기서 끝인 줄 알았죠?</span>
           <span class="complete-overlay__line">🎁 이미지를 다 찾은 사람에게 주는<br>깜짝 선물이 있어요!</span>
           <span class="complete-overlay__line complete-overlay__line--gap">그리고 키링은 앞으로도 계속 태그해 보세요.</span>
           <span class="complete-overlay__line complete-overlay__line--big">이미지와 함께<br>매번 랜덤 한마디가 나타나요!</span>
-          <button type="button" class="complete-overlay__gift" id="gift-open-btn">선물 열어보기</button>
+          <div class="complete-overlay__actions">
+            <button type="button" class="complete-overlay__gift" id="gift-open-btn">선물 열어보기</button>
+            <button type="button" class="complete-overlay__continue" id="gift-continue-btn">태그 계속하기</button>
+          </div>
         </div>
       </div>
     </div>
@@ -266,7 +267,7 @@
       paintGiftButton();
       fitOverlayLines();
     }, 5000);
-    document.getElementById("gift-close-btn").addEventListener("click", function () {
+    document.getElementById("gift-continue-btn").addEventListener("click", function () {
       overlay.classList.remove("is-visible");
     });
     giftBtn.addEventListener("click", function () {
