@@ -140,12 +140,14 @@ function recordIncomingTags(tags) {
     if (!statsSheet) {
       throw new Error("통계 시트가 없습니다. setupSpreadsheet()를 먼저 실행하세요.");
     }
-    ensureLoggedCounts_(ss, statsSheet);
+    ensureSumFormulas(statsSheet);
+    ensureBaseline_(ss, statsSheet);
     const log = ensureReceiveSheet_(ss);
     const rows = tags.map(function (tag) {
       return [tag.id, tag.imageId, tag.source, new Date()];
     });
     log.getRange(log.getLastRow() + 1, 1, rows.length, 4).setValues(rows);
+    rebuildStatsFromLog_(ss, statsSheet);
     return {
       ok: true,
       saved: tags.map(function (tag) { return tag.id; }),
@@ -168,39 +170,60 @@ function ensureReceiveSheet_(ss) {
   return sheet;
 }
 
-function yearCountFormula_(row, baselineCol, source) {
-  return '=N(기준!' + baselineCol + row + ')+IF(A' + row + '="";"";IFERROR(COUNTUNIQUE(FILTER(수신!$A$2:$A$20000;수신!$B$2:$B$20000=A' + row + ';수신!$C$2:$C$20000="' + source + '"));0))';
+function ensureLoggedCounts_(ss, statsSheet) {
+  ensureSumFormulas(statsSheet);
+  ensureBaseline_(ss, statsSheet);
+  rebuildStatsFromLog_(ss, statsSheet);
 }
 
-function ensureLoggedCounts_(ss, statsSheet) {
-  const current = String(statsSheet.getRange("C4").getFormula() || "");
-  const hasLogFormula = current.indexOf("수신") >= 0;
-  if (hasLogFormula && String(statsSheet.getRange("Z1").getValue()) === "v2") {
-    ensureSumFormulas(statsSheet);
-    return;
-  }
+function ensureBaseline_(ss, statsSheet) {
+  let base = ss.getSheetByName("기준");
+  if (base && String(base.getRange("A4").getValue() || "") !== "") return base;
+
+  if (!base) base = ss.insertSheet("기준");
+  base.getRange("A1").setValue("기존 횟수 보관. 이 시트를 지우면 숫자가 어긋납니다.");
+
+  const currentFormula = String(statsSheet.getRange("C4").getFormula() || "");
+  if (currentFormula) return base;
 
   const lastRow = Math.max(statsSheet.getLastRow(), 4);
   const count = lastRow - 3;
-  if (!hasLogFormula) {
-    let base = ss.getSheetByName("기준");
-    if (!base) base = ss.insertSheet("기준");
-    base.getRange("A1").setValue("기존 횟수 보관. 이 시트를 지우면 숫자가 어긋납니다.");
-    const snapshot = statsSheet.getRange(4, 1, count, 4).getValues();
-    base.getRange(4, 1, count, 4).setValues(snapshot);
-  }
+  const snapshot = statsSheet.getRange(4, 1, count, 4).getValues();
+  base.getRange(4, 1, count, 4).setValues(snapshot);
+  return base;
+}
 
-  const formulasC = [];
-  const formulasD = [];
+function rebuildStatsFromLog_(ss, statsSheet) {
+  const base = ss.getSheetByName("기준");
+  const log = ss.getSheetByName("수신");
+  if (!base) return;
+
+  const count = Math.max(base.getLastRow(), statsSheet.getLastRow(), 4) - 3;
+  const baseRows = base.getRange(4, 1, count, 4).getValues();
+  const logLast = log ? log.getLastRow() : 1;
+  const logRows = log && logLast >= 2 ? log.getRange(2, 1, logLast - 1, 3).getValues() : [];
+  const seen = {};
+  const add = {};
+
+  logRows.forEach(function (row) {
+    const id = String(row[0] || "");
+    if (!id || seen[id]) return;
+    seen[id] = true;
+    const key = padId(row[1]) + "|" + normalizeSource(row[2]);
+    add[key] = (add[key] || 0) + 1;
+  });
+
+  const outC = [];
+  const outD = [];
   for (let i = 0; i < count; i++) {
-    const row = 4 + i;
-    formulasC.push([yearCountFormula_(row, "C", "nfc")]);
-    formulasD.push([yearCountFormula_(row, "D", "web")]);
+    const imageId = padId(baseRows[i][0] || "");
+    const baseC = Number(baseRows[i][2]) || 0;
+    const baseD = Number(baseRows[i][3]) || 0;
+    outC.push([imageId ? baseC + (add[imageId + "|nfc"] || 0) : ""]);
+    outD.push([imageId ? baseD + (add[imageId + "|web"] || 0) : ""]);
   }
-  statsSheet.getRange(4, 3, count, 1).setFormulas(formulasC);
-  statsSheet.getRange(4, 4, count, 1).setFormulas(formulasD);
-  statsSheet.getRange("Z1").setValue("v2");
-  ensureSumFormulas(statsSheet);
+  statsSheet.getRange(4, 3, count, 1).setValues(outC);
+  statsSheet.getRange(4, 4, count, 1).setValues(outD);
 }
 
 function getImageList(sheet) {
